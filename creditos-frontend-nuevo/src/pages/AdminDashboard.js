@@ -17,7 +17,7 @@ try {
   console.log('jspdf no instalado');
 }
 
-const API_URL = 'https://sistema-creditos-backend.vercel.app/api';
+const API_URL = process.env.REACT_APP_API_URL || 'https://sistema-creditos-backend.vercel.app/api';
 
 function AdminDashboard() {
   const { usuario, logout } = useAuth();
@@ -28,6 +28,8 @@ function AdminDashboard() {
   const [simulaciones, setSimulaciones] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [usuarioEditando, setUsuarioEditando] = useState(null);
   const [nuevoUsuario, setNuevoUsuario] = useState({ nombre: '', email: '', telefono: '', password: '', rol: 'usuario' });
   const [fechaInicio, setFechaInicio] = useState('');
   const [fechaFin, setFechaFin] = useState('');
@@ -35,7 +37,7 @@ function AdminDashboard() {
   const [filtroActivo, setFiltroActivo] = useState(false);
   const dataLoadedRef = useRef(false);
 
-  // Función para cargar datos - solo se ejecuta una vez
+  // Función para cargar datos
   const cargarDatos = useCallback(async () => {
     try {
       const [usuariosRes, registrosRes, simulacionesRes] = await Promise.all([
@@ -60,7 +62,7 @@ function AdminDashboard() {
     }
   }, [logout, navigate]);
 
-  // Cargar datos solo una vez al montar el componente y si es admin
+  // Cargar datos solo una vez
   useEffect(() => {
     if (!usuario) return;
     
@@ -75,7 +77,7 @@ function AdminDashboard() {
     }
   }, [usuario, navigate, cargarDatos]);
 
-  // Función para recargar datos manualmente (después de crear/eliminar/actualizar)
+  // Función para recargar datos manualmente
   const recargarDatos = async () => {
     setLoading(true);
     try {
@@ -130,6 +132,41 @@ function AdminDashboard() {
       toast.error('Error al recargar');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Desactivar/Activar usuario
+  const toggleActivoUsuario = async (id, activoActual, nombre) => {
+    const nuevoEstado = !activoActual;
+    const accion = nuevoEstado ? 'activar' : 'desactivar';
+    
+    if (window.confirm(`¿${accion.toUpperCase()} al usuario "${nombre}"?`)) {
+      try {
+        await axios.put(`${API_URL}/admin/usuarios/${id}`, { activo: nuevoEstado });
+        toast.success(`Usuario ${accion}do correctamente`);
+        recargarDatos();
+      } catch (error) {
+        toast.error(error.response?.data?.message || 'Error al cambiar estado');
+      }
+    }
+  };
+
+  // Editar usuario
+  const editarUsuario = async (e) => {
+    e.preventDefault();
+    try {
+      await axios.put(`${API_URL}/admin/usuarios/${usuarioEditando.id}`, {
+        nombre: usuarioEditando.nombre,
+        email: usuarioEditando.email,
+        telefono: usuarioEditando.telefono,
+        rol: usuarioEditando.rol
+      });
+      toast.success('Usuario actualizado correctamente');
+      setShowEditModal(false);
+      setUsuarioEditando(null);
+      recargarDatos();
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Error al actualizar usuario');
     }
   };
 
@@ -283,18 +320,6 @@ function AdminDashboard() {
     }
   };
 
-  const eliminarUsuario = async (id, nombre) => {
-    if (window.confirm(`¿Eliminar a "${nombre}"?`)) {
-      try {
-        await axios.delete(`${API_URL}/admin/usuarios/${id}`);
-        toast.success('Usuario eliminado');
-        recargarDatos();
-      } catch (error) {
-        toast.error(error.response?.data?.message || 'Error al eliminar');
-      }
-    }
-  };
-
   const actualizarRol = async (id, rol) => {
     try {
       await axios.put(`${API_URL}/admin/usuarios/${id}`, { rol });
@@ -330,39 +355,26 @@ function AdminDashboard() {
     return new Date(date).toLocaleDateString('es-ES');
   };
 
-  // Mostrar pantalla de carga solo la primera vez
   if (loading) {
-    return (
-      <div className="admin-container">
-        <div className="admin-main" style={{ textAlign: 'center', padding: '50px' }}>
-          Cargando datos...
-        </div>
-      </div>
-    );
+    return <div className="admin-container"><div className="admin-main">Cargando datos...</div></div>;
   }
 
   if (!usuario || usuario.rol !== 'admin') {
-    return (
-      <div className="admin-container">
-        <div className="admin-main" style={{ textAlign: 'center', padding: '50px' }}>
-          Verificando permisos...
-        </div>
-      </div>
-    );
+    return <div className="admin-container"><div className="admin-main">Verificando permisos...</div></div>;
   }
 
   return (
     <div className="admin-container">
       <header className="admin-header">
         <div className="logo-area">
-          <div className="logo-circle">SC</div>
+          <img src="/icon.png" alt="Societaria Cantera" className="logo-icon" />
           <div>
             <h1>Societaria Cantera R.L.</h1>
             <p>Panel de Administración</p>
           </div>
         </div>
         <div className="user-info">
-          <span> Admin: {usuario?.nombre}</span>
+          <span>Administrador: {usuario?.nombre}</span>
           <button onClick={handleLogout} className="btn-logout">Cerrar Sesión</button>
         </div>
       </header>
@@ -402,16 +414,28 @@ function AdminDashboard() {
                       <td>{user.telefono || '-'}</td>
                       <td>
                         {user.id === usuario?.id ? (
-                          <span className="badge-admin"> Administrador</span>
+                          <span className="badge-admin">Administrador</span>
                         ) : (
                           <select value={user.rol} onChange={(e) => actualizarRol(user.id, e.target.value)} className="rol-select">
-                            <option value="usuario"> Usuario</option>
-                            <option value="admin"> Administrador</option>
+                            <option value="usuario">Usuario</option>
+                            <option value="admin">Administrador</option>
                           </select>
                         )}
                       </td>
-                      <td>{user.activo ? '✅ Activo' : '❌ Inactivo'}</td>
-                      <td><button className="btn-delete" onClick={() => eliminarUsuario(user.id, user.nombre)}>🗑️ Eliminar</button></td>
+                      <td>
+                        <button 
+                          className={`btn-${user.activo ? 'disable' : 'enable'}`}
+                          onClick={() => toggleActivoUsuario(user.id, user.activo, user.nombre)}
+                        >
+                          {user.activo ? 'Desactivar' : 'Activar'}
+                        </button>
+                      </td>
+                      <td>
+                        <button className="btn-edit" onClick={() => {
+                          setUsuarioEditando(user);
+                          setShowEditModal(true);
+                        }}>Editar</button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -423,14 +447,14 @@ function AdminDashboard() {
         {activeTab === 'solicitudes' && (
           <div className="card">
             <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
-              <h3>📞 Solicitudes de Crédito</h3>
+              <h3>Registro de Créditos</h3>
               <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                 <input type="date" value={fechaInicio} onChange={(e) => setFechaInicio(e.target.value)} className="date-input" />
                 <input type="date" value={fechaFin} onChange={(e) => setFechaFin(e.target.value)} className="date-input" />
                 <input type="text" value={nombreBuscar} onChange={(e) => setNombreBuscar(e.target.value)} className="date-input" placeholder="Buscar por nombre" />
-                <button className="btn-search" onClick={buscarRegistros}> Buscar</button>
-                {filtroActivo && <button className="btn-clear" onClick={limpiarFiltro}> Limpiar</button>}
-                <button className="btn-download" onClick={descargarReportePDF}> Descargar PDF</button>
+                <button className="btn-search" onClick={buscarRegistros}>🔍 Buscar</button>
+                {filtroActivo && <button className="btn-clear" onClick={limpiarFiltro}>🗑️ Limpiar</button>}
+                <button className="btn-download" onClick={descargarReportePDF}>📥 Descargar PDF</button>
               </div>
             </div>
             <div className="table-responsive">
@@ -451,10 +475,10 @@ function AdminDashboard() {
                       <td>{reg.plazo_interes || '-'} meses</td>
                       <td>
                         <select value={reg.estado || 'pendiente'} onChange={(e) => actualizarEstadoRegistro(reg.id, e.target.value)} className={`estado-select ${reg.estado || 'pendiente'}`}>
-                          <option value="pendiente"> Pendiente</option>
-                          <option value="contactado"> Contactado</option>
-                          <option value="aprobado"> Aprobado</option>
-                          <option value="rechazado"> Rechazado</option>
+                          <option value="pendiente">⏳ Pendiente</option>
+                          <option value="contactado">📞 Contactado</option>
+                          <option value="aprobado">✅ Aprobado</option>
+                          <option value="rechazado">❌ Rechazado</option>
                         </select>
                       </td>
                       <td>{reg.usuario_registro || 'Usuario web'}</td>
@@ -500,6 +524,7 @@ function AdminDashboard() {
         )}
       </div>
 
+      {/* Modal Nuevo Usuario */}
       {showModal && (
         <div className="modal-overlay" onClick={() => { setShowModal(false); setNuevoUsuario({ nombre: '', email: '', telefono: '', password: '', rol: 'usuario' }); }}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
@@ -510,12 +535,34 @@ function AdminDashboard() {
               <input type="tel" placeholder="Teléfono" value={nuevoUsuario.telefono} onChange={(e) => setNuevoUsuario({...nuevoUsuario, telefono: e.target.value})} />
               <input type="password" placeholder="Contraseña" required value={nuevoUsuario.password} onChange={(e) => setNuevoUsuario({...nuevoUsuario, password: e.target.value})} />
               <select value={nuevoUsuario.rol} onChange={(e) => setNuevoUsuario({...nuevoUsuario, rol: e.target.value})}>
-                <option value="usuario"> Usuario</option>
-                <option value="admin"> Administrador</option>
+                <option value="usuario">Usuario</option>
+                <option value="admin">Administrador</option>
               </select>
               <div className="modal-buttons">
                 <button type="button" className="btn-cancel" onClick={() => { setShowModal(false); setNuevoUsuario({ nombre: '', email: '', telefono: '', password: '', rol: 'usuario' }); }}>Cancelar</button>
                 <button type="submit" className="btn-save">Guardar</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Editar Usuario */}
+      {showEditModal && usuarioEditando && (
+        <div className="modal-overlay" onClick={() => { setShowEditModal(false); setUsuarioEditando(null); }}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <h3>Editar Usuario</h3>
+            <form onSubmit={editarUsuario}>
+              <input type="text" placeholder="Nombre" required value={usuarioEditando.nombre} onChange={(e) => setUsuarioEditando({...usuarioEditando, nombre: e.target.value})} />
+              <input type="email" placeholder="Email" required value={usuarioEditando.email} onChange={(e) => setUsuarioEditando({...usuarioEditando, email: e.target.value})} />
+              <input type="tel" placeholder="Teléfono" value={usuarioEditando.telefono || ''} onChange={(e) => setUsuarioEditando({...usuarioEditando, telefono: e.target.value})} />
+              <select value={usuarioEditando.rol} onChange={(e) => setUsuarioEditando({...usuarioEditando, rol: e.target.value})}>
+                <option value="usuario">Usuario</option>
+                <option value="admin">Administrador</option>
+              </select>
+              <div className="modal-buttons">
+                <button type="button" className="btn-cancel" onClick={() => { setShowEditModal(false); setUsuarioEditando(null); }}>Cancelar</button>
+                <button type="submit" className="btn-save">Guardar Cambios</button>
               </div>
             </form>
           </div>

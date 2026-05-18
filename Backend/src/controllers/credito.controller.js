@@ -1,39 +1,45 @@
 const { pool } = require('../config/database');
 
-// Función para sumar meses correctamente
+// Función para crear fecha sin zona horaria (mantener el día exacto)
+const crearFechaLocal = (fechaStr) => {
+  const [year, month, day] = fechaStr.split('-').map(Number);
+  return new Date(year, month - 1, day, 12, 0, 0); // Usar medio día para evitar problemas de zona horaria
+};
+
+// Función para formatear fecha a YYYY-MM-DD
+const formatearFechaLocal = (fecha) => {
+  const year = fecha.getFullYear();
+  const month = String(fecha.getMonth() + 1).padStart(2, '0');
+  const day = String(fecha.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+// Función para sumar meses manteniendo el mismo día
 const sumarMeses = (fecha, meses) => {
-  const nuevaFecha = new Date(fecha);
-  const diaOriginal = nuevaFecha.getDate();
-  nuevaFecha.setMonth(nuevaFecha.getMonth() + meses);
-  
-  // Si el día cambió (ej: 31 de enero -> 3 de marzo), ajustar al último día del mes
-  if (nuevaFecha.getDate() !== diaOriginal) {
-    nuevaFecha.setDate(0); // Último día del mes anterior
-  }
-  
+  const year = fecha.getFullYear();
+  const month = fecha.getMonth() + meses;
+  const day = fecha.getDate();
+  const nuevaFecha = new Date(year, month, day, 12, 0, 0);
   return nuevaFecha;
 };
 
 // Función principal de simulación
-const calcularSimulacion = (capital, tasa, plazo, fechaInicio, fechaPrimerPagoCustom = null) => {
+const calcularSimulacion = (capital, tasa, plazo, fechaInicioStr, fechaPrimerPagoStr = null) => {
   const TasaSeguro = 0.0009;
-  const fechaInicioDate = new Date(fechaInicio);
+  const fechaInicioDate = crearFechaLocal(fechaInicioStr);
   
-  // Determinar fecha de primer pago (custom o automática - 10 del mes siguiente al siguiente)
+  // Determinar fecha de primer pago
   let fechaPrimerPago;
-  if (fechaPrimerPagoCustom) {
-    fechaPrimerPago = new Date(fechaPrimerPagoCustom);
-    // Asegurar que la fecha mantenga el día exacto (ej: 5 de julio)
-    fechaPrimerPago.setHours(0, 0, 0, 0);
+  if (fechaPrimerPagoStr) {
+    fechaPrimerPago = crearFechaLocal(fechaPrimerPagoStr);
   } else {
-    fechaPrimerPago = new Date(fechaInicioDate.getFullYear(), fechaInicioDate.getMonth() + 2, 10);
+    // Calcular primera cuota (10 del mes siguiente al siguiente)
+    fechaPrimerPago = new Date(fechaInicioDate.getFullYear(), fechaInicioDate.getMonth() + 2, 10, 12, 0, 0);
   }
   
-  // Guardar el día de pago para usarlo en todas las cuotas
-  const diaPago = fechaPrimerPago.getDate();
-  
   // Días reales primera cuota
-  const diasPrimerPago = Math.round((fechaPrimerPago - fechaInicioDate) / (1000 * 60 * 60 * 24));
+  const diffTime = Math.abs(fechaPrimerPago - fechaInicioDate);
+  const diasPrimerPago = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   
   // Capital por cuota (constante)
   const capitalCuotaBase = capital / plazo;
@@ -62,12 +68,12 @@ const calcularSimulacion = (capital, tasa, plazo, fechaInicio, fechaPrimerPagoCu
   
   for (let i = 1; i <= plazo; i++) {
     if (i > 1) {
-      // Sumar un mes manteniendo el mismo día (ej: 5 de julio -> 5 de agosto)
       fechaPago = sumarMeses(fechaPago, 1);
     }
     
     // Calcular días reales entre fecha anterior y fecha de pago
-    const dias = Math.round((fechaPago - fechaAnterior) / (1000 * 60 * 60 * 24));
+    const diffDays = Math.abs(fechaPago - fechaAnterior);
+    const dias = Math.ceil(diffDays / (1000 * 60 * 60 * 24));
     
     // Interés sobre saldo actual con días reales
     const interes = (saldo * tasa * dias) / 36000;
@@ -133,20 +139,18 @@ const calcularSimulacion = (capital, tasa, plazo, fechaInicio, fechaPrimerPagoCu
 };
 
 // Simular crédito con cuota fija personalizada
-const calcularSimulacionConCuotaFija = (capital, tasa, plazo, fechaInicio, fechaPrimerPagoCustom, cuotaFija) => {
+const calcularSimulacionConCuotaFija = (capital, tasa, plazo, fechaInicioStr, fechaPrimerPagoStr, cuotaFija) => {
   const TasaSeguro = 0.0009;
-  const fechaInicioDate = new Date(fechaInicio);
+  const fechaInicioDate = crearFechaLocal(fechaInicioStr);
   
   // Determinar fecha de primer pago
   let fechaPrimerPago;
-  if (fechaPrimerPagoCustom) {
-    fechaPrimerPago = new Date(fechaPrimerPagoCustom);
-    fechaPrimerPago.setHours(0, 0, 0, 0);
+  if (fechaPrimerPagoStr) {
+    fechaPrimerPago = crearFechaLocal(fechaPrimerPagoStr);
   } else {
-    fechaPrimerPago = new Date(fechaInicioDate.getFullYear(), fechaInicioDate.getMonth() + 2, 10);
+    fechaPrimerPago = new Date(fechaInicioDate.getFullYear(), fechaInicioDate.getMonth() + 2, 10, 12, 0, 0);
   }
   
-  const diaPago = fechaPrimerPago.getDate();
   const capitalCuotaBase = capital / plazo;
   
   let saldo = capital;
@@ -163,7 +167,8 @@ const calcularSimulacionConCuotaFija = (capital, tasa, plazo, fechaInicio, fecha
       fechaPago = sumarMeses(fechaPago, 1);
     }
     
-    const dias = Math.round((fechaPago - fechaAnterior) / (1000 * 60 * 60 * 24));
+    const diffDays = Math.abs(fechaPago - fechaAnterior);
+    const dias = Math.ceil(diffDays / (1000 * 60 * 60 * 24));
     const interes = (saldo * tasa * dias) / 36000;
     const interesRedondeado = Math.round(interes * 100) / 100;
     const cargoSeguro = saldo * TasaSeguro;
@@ -227,7 +232,7 @@ const simularCredito = async (req, res) => {
       return res.status(400).json({ message: 'Faltan datos requeridos' });
     }
     
-    const resultado = calcularSimulacion(capital, tasa, plazo, fechaInicio || new Date(), fechaPrimerPago);
+    const resultado = calcularSimulacion(capital, tasa, plazo, fechaInicio, fechaPrimerPago);
     
     const query = `
       INSERT INTO simulaciones (usuario_id, capital_actual, tasa_actual, plazo_actual, 
@@ -276,7 +281,7 @@ const simularCreditoConCuota = async (req, res) => {
       return res.status(400).json({ message: 'Cuota fija inválida' });
     }
     
-    const resultado = calcularSimulacionConCuotaFija(capital, tasa, plazo, fechaInicio || new Date(), fechaPrimerPago, cuotaFija);
+    const resultado = calcularSimulacionConCuotaFija(capital, tasa, plazo, fechaInicio, fechaPrimerPago, cuotaFija);
     
     const query = `
       INSERT INTO simulaciones (usuario_id, capital_actual, tasa_actual, plazo_actual, 

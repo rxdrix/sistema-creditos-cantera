@@ -3,17 +3,19 @@ const bcrypt = require('bcryptjs');
 
 const listarUsuarios = async (req, res) => {
   try {
+    console.log('📋 [ADMIN] Listando usuarios');
     const query = `SELECT id, nombre, email, telefono, rol, activo FROM usuarios ORDER BY id DESC`;
     const result = await pool.query(query);
     res.status(200).json(result.rows);
   } catch (error) {
-    console.error('Error en listarUsuarios:', error.message);
+    console.error('❌ Error en listarUsuarios:', error.message);
     res.status(500).json({ message: 'Error al listar usuarios', error: error.message });
   }
 };
 
 const listarRegistrosInteres = async (req, res) => {
   try {
+    console.log('📋 [ADMIN] Listando registros de interés');
     const query = `
       SELECT ri.*, u.nombre as usuario_registro 
       FROM registros_interes ri 
@@ -23,13 +25,14 @@ const listarRegistrosInteres = async (req, res) => {
     const result = await pool.query(query);
     res.json(result.rows);
   } catch (error) {
-    console.error('Error en listarRegistrosInteres:', error.message);
+    console.error('❌ Error en listarRegistrosInteres:', error.message);
     res.status(500).json({ message: 'Error al listar registros', error: error.message });
   }
 };
 
 const listarTodasSimulaciones = async (req, res) => {
   try {
+    console.log('📋 [ADMIN] Listando simulaciones');
     const query = `
       SELECT s.*, u.nombre as usuario_nombre 
       FROM simulaciones s 
@@ -39,7 +42,7 @@ const listarTodasSimulaciones = async (req, res) => {
     const result = await pool.query(query);
     res.json(result.rows);
   } catch (error) {
-    console.error('Error en listarTodasSimulaciones:', error.message);
+    console.error('❌ Error en listarTodasSimulaciones:', error.message);
     res.status(500).json({ message: 'Error al listar simulaciones', error: error.message });
   }
 };
@@ -55,7 +58,7 @@ const actualizarEstadoRegistro = async (req, res) => {
     }
     res.json({ success: true, registro: result.rows[0] });
   } catch (error) {
-    console.error('Error en actualizarEstadoRegistro:', error.message);
+    console.error('❌ Error en actualizarEstadoRegistro:', error.message);
     res.status(500).json({ message: 'Error al actualizar estado', error: error.message });
   }
 };
@@ -69,7 +72,7 @@ const crearUsuario = async (req, res) => {
     const result = await pool.query(query, values);
     res.json({ success: true, usuario: result.rows[0] });
   } catch (error) {
-    console.error('Error en crearUsuario:', error.message);
+    console.error('❌ Error en crearUsuario:', error.message);
     res.status(500).json({ message: 'Error al crear usuario', error: error.message });
   }
 };
@@ -77,14 +80,27 @@ const crearUsuario = async (req, res) => {
 const actualizarUsuario = async (req, res) => {
   try {
     const { id } = req.params;
-    const { rol } = req.body;
+    const { nombre, email, telefono, rol, activo } = req.body;
     
+    // No permitir modificar el propio usuario
     if (parseInt(id) === req.usuario.id) {
-      return res.status(400).json({ message: 'No puedes cambiar tu propio rol' });
+      return res.status(400).json({ message: 'No puedes modificar tu propio usuario' });
     }
     
-    const query = `UPDATE usuarios SET rol = $1 WHERE id = $2 RETURNING id, nombre, email, rol`;
-    const result = await pool.query(query, [rol, id]);
+    let query;
+    let values;
+    
+    if (activo !== undefined) {
+      // Actualizar solo estado (activar/desactivar)
+      query = `UPDATE usuarios SET activo = $1 WHERE id = $2 RETURNING id, nombre, email, telefono, rol, activo`;
+      values = [activo, id];
+    } else {
+      // Actualizar datos completos
+      query = `UPDATE usuarios SET nombre = $1, email = $2, telefono = $3, rol = $4 WHERE id = $5 RETURNING id, nombre, email, telefono, rol, activo`;
+      values = [nombre, email, telefono, rol, id];
+    }
+    
+    const result = await pool.query(query, values);
     
     if (result.rows.length === 0) {
       return res.status(404).json({ message: 'Usuario no encontrado' });
@@ -92,7 +108,7 @@ const actualizarUsuario = async (req, res) => {
     
     res.json({ success: true, usuario: result.rows[0] });
   } catch (error) {
-    console.error('Error en actualizarUsuario:', error.message);
+    console.error('❌ Error en actualizarUsuario:', error.message);
     res.status(500).json({ message: 'Error al actualizar usuario', error: error.message });
   }
 };
@@ -114,7 +130,7 @@ const eliminarUsuario = async (req, res) => {
     
     res.json({ success: true, message: 'Usuario eliminado correctamente' });
   } catch (error) {
-    console.error('Error en eliminarUsuario:', error.message);
+    console.error('❌ Error en eliminarUsuario:', error.message);
     res.status(500).json({ message: 'Error al eliminar usuario', error: error.message });
   }
 };
@@ -149,7 +165,7 @@ const buscarRegistros = async (req, res) => {
     const result = await pool.query(query, params);
     res.json(result.rows);
   } catch (error) {
-    console.error('Error en buscarRegistros:', error.message);
+    console.error('❌ Error en buscarRegistros:', error.message);
     res.status(500).json({ message: 'Error al buscar registros', error: error.message });
   }
 };

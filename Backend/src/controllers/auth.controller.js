@@ -14,9 +14,9 @@ const register = async (req, res) => {
     const passwordHash = await bcrypt.hash(password, 10);
     
     const query = `
-      INSERT INTO usuarios (nombre, email, telefono, password_hash, rol)
-      VALUES ($1, $2, $3, $4, 'usuario')
-      RETURNING id, nombre, email, telefono, rol
+      INSERT INTO usuarios (nombre, email, telefono, password_hash, rol, activo)
+      VALUES ($1, $2, $3, $4, 'usuario', true)
+      RETURNING id, nombre, email, telefono, rol, activo
     `;
     
     const values = [nombre, email, telefono, passwordHash];
@@ -57,6 +57,12 @@ const login = async (req, res) => {
     
     const usuario = result.rows[0];
     
+    // Verificar si el usuario está activo
+    if (!usuario.activo) {
+      console.log('❌ Usuario desactivado:', email);
+      return res.status(401).json({ message: 'Usuario desactivado. Contacte al administrador' });
+    }
+    
     const passwordValido = await bcrypt.compare(password, usuario.password_hash);
     
     if (!passwordValido) {
@@ -94,7 +100,7 @@ const getPerfil = async (req, res) => {
     }
     
     const result = await pool.query(
-      'SELECT id, nombre, email, telefono, rol FROM usuarios WHERE id = $1',
+      'SELECT id, nombre, email, telefono, rol, activo FROM usuarios WHERE id = $1',
       [req.usuario.id]
     );
     
