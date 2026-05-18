@@ -1,18 +1,36 @@
-import { pool } from '../config/database.js';
+const { pool } = require('../config/database');
+
+// Función para sumar meses correctamente
+const sumarMeses = (fecha, meses) => {
+  const nuevaFecha = new Date(fecha);
+  const diaOriginal = nuevaFecha.getDate();
+  nuevaFecha.setMonth(nuevaFecha.getMonth() + meses);
+  
+  // Si el día cambió (ej: 31 de enero -> 3 de marzo), ajustar al último día del mes
+  if (nuevaFecha.getDate() !== diaOriginal) {
+    nuevaFecha.setDate(0); // Último día del mes anterior
+  }
+  
+  return nuevaFecha;
+};
 
 // Función principal de simulación
 const calcularSimulacion = (capital, tasa, plazo, fechaInicio, fechaPrimerPagoCustom = null) => {
   const TasaSeguro = 0.0009;
   const fechaInicioDate = new Date(fechaInicio);
   
-  // Determinar fecha de primer pago (custom o automática)
+  // Determinar fecha de primer pago (custom o automática - 10 del mes siguiente al siguiente)
   let fechaPrimerPago;
   if (fechaPrimerPagoCustom) {
     fechaPrimerPago = new Date(fechaPrimerPagoCustom);
+    // Asegurar que la fecha mantenga el día exacto (ej: 5 de julio)
+    fechaPrimerPago.setHours(0, 0, 0, 0);
   } else {
-    // Calcular primera cuota (10 del mes siguiente al siguiente)
     fechaPrimerPago = new Date(fechaInicioDate.getFullYear(), fechaInicioDate.getMonth() + 2, 10);
   }
+  
+  // Guardar el día de pago para usarlo en todas las cuotas
+  const diaPago = fechaPrimerPago.getDate();
   
   // Días reales primera cuota
   const diasPrimerPago = Math.round((fechaPrimerPago - fechaInicioDate) / (1000 * 60 * 60 * 24));
@@ -44,7 +62,8 @@ const calcularSimulacion = (capital, tasa, plazo, fechaInicio, fechaPrimerPagoCu
   
   for (let i = 1; i <= plazo; i++) {
     if (i > 1) {
-      fechaPago = new Date(fechaPago.getFullYear(), fechaPago.getMonth() + 1, 10);
+      // Sumar un mes manteniendo el mismo día (ej: 5 de julio -> 5 de agosto)
+      fechaPago = sumarMeses(fechaPago, 1);
     }
     
     // Calcular días reales entre fecha anterior y fecha de pago
@@ -113,23 +132,23 @@ const calcularSimulacion = (capital, tasa, plazo, fechaInicio, fechaPrimerPagoCu
   };
 };
 
-// Función para simular con cuota fija personalizada
+// Simular crédito con cuota fija personalizada
 const calcularSimulacionConCuotaFija = (capital, tasa, plazo, fechaInicio, fechaPrimerPagoCustom, cuotaFija) => {
   const TasaSeguro = 0.0009;
   const fechaInicioDate = new Date(fechaInicio);
   
-  // Determinar fecha de primer pago (custom o automática)
+  // Determinar fecha de primer pago
   let fechaPrimerPago;
   if (fechaPrimerPagoCustom) {
     fechaPrimerPago = new Date(fechaPrimerPagoCustom);
+    fechaPrimerPago.setHours(0, 0, 0, 0);
   } else {
     fechaPrimerPago = new Date(fechaInicioDate.getFullYear(), fechaInicioDate.getMonth() + 2, 10);
   }
   
-  // Capital por cuota (constante)
+  const diaPago = fechaPrimerPago.getDate();
   const capitalCuotaBase = capital / plazo;
   
-  // Generar detalle de cuotas con la cuota fija proporcionada
   let saldo = capital;
   let ahorroTotal = 0;
   let totalCapital = 0;
@@ -141,21 +160,15 @@ const calcularSimulacionConCuotaFija = (capital, tasa, plazo, fechaInicio, fecha
   
   for (let i = 1; i <= plazo; i++) {
     if (i > 1) {
-      fechaPago = new Date(fechaPago.getFullYear(), fechaPago.getMonth() + 1, 10);
+      fechaPago = sumarMeses(fechaPago, 1);
     }
     
-    // Calcular días reales entre fecha anterior y fecha de pago
     const dias = Math.round((fechaPago - fechaAnterior) / (1000 * 60 * 60 * 24));
-    
-    // Interés sobre saldo actual con días reales
     const interes = (saldo * tasa * dias) / 36000;
     const interesRedondeado = Math.round(interes * 100) / 100;
-    
-    // Cargo seguro
     const cargoSeguro = saldo * TasaSeguro;
     const cargoRedondeado = Math.round(cargoSeguro * 100) / 100;
     
-    // Capital de la cuota
     let capitalCuota;
     if (i === plazo) {
       capitalCuota = Math.round(saldo * 100) / 100;
@@ -163,27 +176,21 @@ const calcularSimulacionConCuotaFija = (capital, tasa, plazo, fechaInicio, fecha
       capitalCuota = Math.round(capitalCuotaBase * 100) / 100;
     }
     
-    // Total real a pagar
     const totalPagarReal = capitalCuota + interesRedondeado + cargoRedondeado;
     const totalPagarRealRedondeado = Math.round(totalPagarReal * 100) / 100;
-    
-    // Ahorro de esta cuota (usando la cuota fija proporcionada)
     let ahorro = cuotaFija - totalPagarRealRedondeado;
     if (ahorro < 0) ahorro = 0;
     ahorro = Math.round(ahorro * 100) / 100;
     
-    // Acumular totales
     totalCapital += capitalCuota;
     totalInteres += interesRedondeado;
     totalSeguro += cargoRedondeado;
     ahorroTotal += ahorro;
     
-    // Actualizar saldo
     saldo = saldo - capitalCuota;
     if (saldo < 0) saldo = 0;
     saldo = Math.round(saldo * 100) / 100;
     
-    // Guardar cuota
     cuotas.push({
       cuota: i,
       fecha: fechaPago,
@@ -211,7 +218,7 @@ const calcularSimulacionConCuotaFija = (capital, tasa, plazo, fechaInicio, fecha
 };
 
 // Simular crédito normal
-export const simularCredito = async (req, res) => {
+const simularCredito = async (req, res) => {
   try {
     const { capital, tasa, plazo, fechaInicio, fechaPrimerPago } = req.body;
     const usuarioId = req.usuario.id;
@@ -222,7 +229,6 @@ export const simularCredito = async (req, res) => {
     
     const resultado = calcularSimulacion(capital, tasa, plazo, fechaInicio || new Date(), fechaPrimerPago);
     
-    // Guardar simulación en base de datos
     const query = `
       INSERT INTO simulaciones (usuario_id, capital_actual, tasa_actual, plazo_actual, 
                                 cuota_redondeada, ahorro_total, cuota_real_primera, detalles_simulacion)
@@ -257,7 +263,7 @@ export const simularCredito = async (req, res) => {
 };
 
 // Simular crédito con cuota fija personalizada
-export const simularCreditoConCuota = async (req, res) => {
+const simularCreditoConCuota = async (req, res) => {
   try {
     const { capital, tasa, plazo, fechaInicio, fechaPrimerPago, cuotaFija } = req.body;
     const usuarioId = req.usuario.id;
@@ -272,7 +278,6 @@ export const simularCreditoConCuota = async (req, res) => {
     
     const resultado = calcularSimulacionConCuotaFija(capital, tasa, plazo, fechaInicio || new Date(), fechaPrimerPago, cuotaFija);
     
-    // Guardar simulación en base de datos
     const query = `
       INSERT INTO simulaciones (usuario_id, capital_actual, tasa_actual, plazo_actual, 
                                 cuota_redondeada, ahorro_total, cuota_real_primera, detalles_simulacion)
@@ -306,7 +311,7 @@ export const simularCreditoConCuota = async (req, res) => {
   }
 };
 
-export const getHistorialSimulaciones = async (req, res) => {
+const getHistorialSimulaciones = async (req, res) => {
   try {
     const usuarioId = req.usuario.id;
     const query = `
@@ -324,7 +329,7 @@ export const getHistorialSimulaciones = async (req, res) => {
   }
 };
 
-export const registrarInteres = async (req, res) => {
+const registrarInteres = async (req, res) => {
   try {
     const { nombre, email, telefono, monto, plazo } = req.body;
     const usuarioId = req.usuario.id;
@@ -340,4 +345,11 @@ export const registrarInteres = async (req, res) => {
     console.error(error);
     res.status(500).json({ message: 'Error en el servidor' });
   }
+};
+
+module.exports = { 
+  simularCredito, 
+  simularCreditoConCuota,
+  getHistorialSimulaciones, 
+  registrarInteres 
 };
