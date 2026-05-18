@@ -1,19 +1,17 @@
-import express from 'express';
-import { verificarToken } from '../middleware/auth.js';
-import { 
+const express = require('express');
+const { verificarToken } = require('../middleware/auth');
+const { 
   simularCredito, 
-  simularCreditoConCuota,
   getHistorialSimulaciones, 
   registrarInteres 
-} from '../controllers/credito.controller.js';
+} = require('../controllers/credito.controller');
 
 const router = express.Router();
 
 router.use(verificarToken);
 
 router.post('/simular', simularCredito);
-router.post('/simular-con-cuota', simularCreditoConCuota);
 router.get('/historial', getHistorialSimulaciones);
 router.post('/registrar-interes', registrarInteres);
 
-export default router;
+module.exports = router;
