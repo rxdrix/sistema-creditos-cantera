@@ -22,16 +22,16 @@ export default function Login() {
       <div className="login-card">
         <div className="logo-section">
           <img src="/logo.png" alt="Societaria Cantera R.L." className="logo" />
-          <h1 className="brand-title">Cantera R.L.</h1>
+          <h1 className="brand-title">Societaria Cantera R.L.</h1>
           <p className="brand-subtitle">Cooperativa de Ahorro y Crédito</p>
         </div>
 
-        <h2 className="welcome-title">Bienvenido</h2>
-        <p className="welcome-subtitle">Inicie Sesion Para Continuar</p>
+        <h2 className="welcome-title">Welcome Back!</h2>
+        <p className="welcome-subtitle">Sign in to continue</p>
 
         <form onSubmit={handleSubmit} className="login-form">
           <div className="input-group">
-            <label>Ingrese su Email</label>
+            <label>Email ID</label>
             <input
               type="email"
               required
@@ -42,7 +42,7 @@ export default function Login() {
           </div>
 
           <div className="input-group">
-            <label>Contraseña</label>
+            <label>Password</label>
             <input
               type="password"
               required
@@ -51,9 +51,18 @@ export default function Login() {
               onChange={(e) => setPassword(e.target.value)}
             />
           </div>
+
+          <div className="forgot-link">
+            <a href="#">Forgot your password?</a>
+          </div>
+
           <button type="submit" className="login-btn">
-            INICIAR SESION
+            LOGIN
           </button>
+
+          <p className="register-text">
+            Don't have an account? <Link to="/register">Register Now</Link>
+          </p>
         </form>
       </div>
     </div>

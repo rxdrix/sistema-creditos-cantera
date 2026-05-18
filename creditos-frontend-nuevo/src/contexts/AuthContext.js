@@ -1,10 +1,10 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 
 const AuthContext = createContext();
-const API_URL = 'http://localhost:5000/api';
-const TIEMPO_INACTIVIDAD = 10 * 60 * 1000; // 10 minutos
+const API_URL = process.env.REACT_APP_API_URL || 'https://sistema-creditos-backend.vercel.app/api';
+const TIEMPO_INACTIVIDAD = 10 * 60 * 1000;
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
@@ -17,7 +17,15 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   let temporizadorInactividad;
 
-  const resetTemporizador = () => {
+  const logout = useCallback(() => {
+    localStorage.removeItem('token');
+    delete axios.defaults.headers.common['Authorization'];
+    setUsuario(null);
+    if (temporizadorInactividad) clearTimeout(temporizadorInactividad);
+    toast.success('Sesión cerrada');
+  }, []);
+
+  const resetTemporizador = useCallback(() => {
     if (temporizadorInactividad) clearTimeout(temporizadorInactividad);
     temporizadorInactividad = setTimeout(() => {
       if (usuario) {
@@ -25,11 +33,11 @@ export const AuthProvider = ({ children }) => {
         logout();
       }
     }, TIEMPO_INACTIVIDAD);
-  };
+  }, [usuario, logout]);
 
-  const handleUserActivity = () => {
+  const handleUserActivity = useCallback(() => {
     if (usuario) resetTemporizador();
-  };
+  }, [usuario, resetTemporizador]);
 
   useEffect(() => {
     window.addEventListener('mousemove', handleUserActivity);
@@ -61,7 +69,7 @@ export const AuthProvider = ({ children }) => {
       window.removeEventListener('scroll', handleUserActivity);
       if (temporizadorInactividad) clearTimeout(temporizadorInactividad);
     };
-  }, []);
+  }, [handleUserActivity, resetTemporizador]);
 
   const login = async (email, password) => {
     try {
@@ -90,14 +98,6 @@ export const AuthProvider = ({ children }) => {
       toast.error(error.response?.data?.message || 'Error al registrar');
       return false;
     }
-  };
-
-  const logout = () => {
-    localStorage.removeItem('token');
-    delete axios.defaults.headers.common['Authorization'];
-    setUsuario(null);
-    if (temporizadorInactividad) clearTimeout(temporizadorInactividad);
-    toast.success('Sesión cerrada');
   };
 
   if (loading) return <div className="min-h-screen flex items-center justify-center">Cargando...</div>;

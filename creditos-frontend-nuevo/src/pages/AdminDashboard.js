@@ -35,12 +35,11 @@ function AdminDashboard() {
   const [filtroActivo, setFiltroActivo] = useState(false);
 
   useEffect(() => {
-    if (usuario && usuario.rol !== 'admin') {
-      navigate('/simulador');
-    }
-    cargarDatos();
-  }, [usuario]);
-
+  if (usuario && usuario.rol !== 'admin') {
+    navigate('/simulador');
+  }
+  cargarDatos();
+}, [usuario, navigate]);
   const cargarDatos = async () => {
     setLoading(true);
     try {
