@@ -11,23 +11,19 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Configurar CORS correctamente
+// Configurar CORS
 const corsOptions = {
   origin: [
     'https://sistema-creditos-cantera.vercel.app',
-    'https://sistema-creditos-cantera.vercel.app/',
     'http://localhost:3000',
     'http://localhost:3001'
   ],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true,
-  optionsSuccessStatus: 200
+  credentials: true
 };
 
 app.use(cors(corsOptions));
-
-// Middleware para manejar preflight requests
 app.options('*', cors(corsOptions));
 
 app.use(express.json());
@@ -40,13 +36,14 @@ app.use('/api/admin', adminRoutes);
 
 // Ruta de prueba
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'OK', timestamp: new Date() });
+  res.json({ status: 'OK', timestamp: new Date(), message: 'API funcionando' });
 });
 
 app.get('/', (req, res) => {
-  res.json({ message: 'API Societaria Cantera R.L.' });
+  res.json({ message: 'API Societaria Cantera R.L.', status: 'online' });
 });
 
+// Solo escuchar si no estamos en Vercel
 if (process.env.NODE_ENV !== 'production') {
   app.listen(PORT, () => {
     console.log(`✅ Servidor corriendo en puerto ${PORT}`);
