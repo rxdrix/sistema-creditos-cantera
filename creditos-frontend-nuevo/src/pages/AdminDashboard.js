@@ -33,13 +33,10 @@ function AdminDashboard() {
   const [fechaFin, setFechaFin] = useState('');
   const [nombreBuscar, setNombreBuscar] = useState('');
   const [filtroActivo, setFiltroActivo] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const cargadoRef = useRef(false);
+  const dataLoadedRef = useRef(false);
 
-  // Función para cargar datos
+  // Función para cargar datos - solo se ejecuta una vez
   const cargarDatos = useCallback(async () => {
-    if (isLoading) return;
-    setIsLoading(true);
     try {
       const [usuariosRes, registrosRes, simulacionesRes] = await Promise.all([
         axios.get(`${API_URL}/admin/usuarios`),
@@ -59,22 +56,43 @@ function AdminDashboard() {
         toast.error('Error al cargar datos');
       }
     } finally {
-      setIsLoading(false);
       setLoading(false);
     }
   }, [logout, navigate]);
 
-  // useEffect solo para carga inicial
+  // Cargar datos solo una vez al montar el componente y si es admin
   useEffect(() => {
-    if (usuario && usuario.rol !== 'admin') {
+    if (!usuario) return;
+    
+    if (usuario.rol !== 'admin') {
       navigate('/simulador');
-    } else if (usuario && usuario.rol === 'admin' && !cargadoRef.current) {
-      cargadoRef.current = true;
+      return;
+    }
+    
+    if (!dataLoadedRef.current) {
+      dataLoadedRef.current = true;
       cargarDatos();
-    } else if (!usuario) {
-      setLoading(false);
     }
   }, [usuario, navigate, cargarDatos]);
+
+  // Función para recargar datos manualmente (después de crear/eliminar/actualizar)
+  const recargarDatos = async () => {
+    setLoading(true);
+    try {
+      const [usuariosRes, registrosRes, simulacionesRes] = await Promise.all([
+        axios.get(`${API_URL}/admin/usuarios`),
+        axios.get(`${API_URL}/admin/registros-interes`),
+        axios.get(`${API_URL}/admin/simulaciones`)
+      ]);
+      setUsuarios(usuariosRes.data);
+      setRegistrosInteres(registrosRes.data);
+      setSimulaciones(simulacionesRes.data);
+    } catch (error) {
+      toast.error('Error al recargar datos');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const buscarRegistros = async () => {
     if (!fechaInicio && !fechaFin && !nombreBuscar) {
@@ -259,7 +277,7 @@ function AdminDashboard() {
       toast.success('Usuario creado');
       setShowModal(false);
       setNuevoUsuario({ nombre: '', email: '', telefono: '', password: '', rol: 'usuario' });
-      cargarDatos();
+      recargarDatos();
     } catch (error) {
       toast.error(error.response?.data?.message || 'Error al crear usuario');
     }
@@ -270,7 +288,7 @@ function AdminDashboard() {
       try {
         await axios.delete(`${API_URL}/admin/usuarios/${id}`);
         toast.success('Usuario eliminado');
-        cargarDatos();
+        recargarDatos();
       } catch (error) {
         toast.error(error.response?.data?.message || 'Error al eliminar');
       }
@@ -281,7 +299,7 @@ function AdminDashboard() {
     try {
       await axios.put(`${API_URL}/admin/usuarios/${id}`, { rol });
       toast.success('Rol actualizado');
-      cargarDatos();
+      recargarDatos();
     } catch (error) {
       toast.error(error.response?.data?.message || 'Error al actualizar');
     }
@@ -291,7 +309,7 @@ function AdminDashboard() {
     try {
       await axios.put(`${API_URL}/admin/registros-interes/${id}/estado`, { estado });
       toast.success('Estado actualizado');
-      cargarDatos();
+      recargarDatos();
     } catch (error) {
       toast.error('Error al actualizar');
     }
@@ -314,11 +332,23 @@ function AdminDashboard() {
 
   // Mostrar pantalla de carga solo la primera vez
   if (loading) {
-    return <div className="admin-container"><div className="admin-main">Cargando datos...</div></div>;
+    return (
+      <div className="admin-container">
+        <div className="admin-main" style={{ textAlign: 'center', padding: '50px' }}>
+          Cargando datos...
+        </div>
+      </div>
+    );
   }
 
   if (!usuario || usuario.rol !== 'admin') {
-    return <div className="admin-container"><div className="admin-main">Verificando permisos...</div></div>;
+    return (
+      <div className="admin-container">
+        <div className="admin-main" style={{ textAlign: 'center', padding: '50px' }}>
+          Verificando permisos...
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -359,7 +389,9 @@ function AdminDashboard() {
             <div className="table-responsive">
               <table className="data-table">
                 <thead>
-                  <tr><th>ID</th><th>Nombre</th><th>Email</th><th>Teléfono</th><th>Rol</th><th>Estado</th><th>Acciones</th></tr>
+                  <tr>
+                    <th>ID</th><th>Nombre</th><th>Email</th><th>Teléfono</th><th>Rol</th><th>Estado</th><th>Acciones</th>
+                  </tr>
                 </thead>
                 <tbody>
                   {usuarios.map(user => (
@@ -404,7 +436,9 @@ function AdminDashboard() {
             <div className="table-responsive">
               <table className="data-table">
                 <thead>
-                  <tr><th>ID</th><th>Nombre</th><th>Email</th><th>Teléfono</th><th>Monto</th><th>Plazo</th><th>Estado</th><th>Registrado por</th><th>Fecha</th></tr>
+                  <tr>
+                    <th>ID</th><th>Nombre</th><th>Email</th><th>Teléfono</th><th>Monto</th><th>Plazo</th><th>Estado</th><th>Registrado por</th><th>Fecha</th>
+                  </tr>
                 </thead>
                 <tbody>
                   {registrosInteres.map(reg => (
@@ -434,43 +468,36 @@ function AdminDashboard() {
         )}
 
         {activeTab === 'simulaciones' && (
-  <div className="card">
-    <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-      <h3>📊 Historial de Simulaciones</h3>
-      <button className="btn-download" onClick={generarPDFSimulaciones}>📥 Descargar PDF</button>
-    </div>
-    <div className="table-responsive">
-      <table className="data-table">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Usuario</th>
-            <th>Monto</th>
-            <th>Tasa</th>
-            <th>Plazo</th>
-            <th>Cuota Fija</th>
-            <th>Ahorro</th>
-            <th>Fecha</th>
-          </tr>
-        </thead>
-        <tbody>
-          {simulaciones.map(sim => (
-            <tr key={sim.id}>
-              <td>{sim.id}</td>
-              <td>{sim.usuario_nombre || sim.usuario_id || '-'}</td>
-              <td>Bs {formatMoney(sim.capital_actual)}</td>
-              <td>{sim.tasa_actual}%</td>
-              <td>{sim.plazo_actual} meses</td>
-              <td><strong>Bs {formatMoney(sim.cuota_redondeada)}</strong></td>
-              <td>Bs {formatMoney(sim.ahorro_total)}</td>
-              <td>{formatDate(sim.fecha_simulacion)}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  </div>
-)}
+          <div className="card">
+            <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h3>📊 Historial de Simulaciones</h3>
+              <button className="btn-download" onClick={generarPDFSimulaciones}>📥 Descargar PDF</button>
+            </div>
+            <div className="table-responsive">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>ID</th><th>Usuario</th><th>Monto</th><th>Tasa</th><th>Plazo</th><th>Cuota Fija</th><th>Ahorro</th><th>Fecha</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {simulaciones.map(sim => (
+                    <tr key={sim.id}>
+                      <td>{sim.id}</td>
+                      <td>{sim.usuario_nombre || sim.usuario_id || '-'}</td>
+                      <td>Bs {formatMoney(sim.capital_actual)}</td>
+                      <td>{sim.tasa_actual}%</td>
+                      <td>{sim.plazo_actual} meses</td>
+                      <td><strong>Bs {formatMoney(sim.cuota_redondeada)}</strong></td>
+                      <td>Bs {formatMoney(sim.ahorro_total)}</td>
+                      <td>{formatDate(sim.fecha_simulacion)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
       </div>
 
       {showModal && (
