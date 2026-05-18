@@ -318,3 +318,17 @@ body {
   background: #b8941e;
   color: white;
 }
+
+.btn-cancelar {
+  background: #dc2626;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.btn-cancelar:hover {
+  background: #b91c1c;
+}

@@ -3,13 +3,11 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
 import toast from 'react-hot-toast';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 import './Simulador.css';
 
-// Importar jspdf correctamente
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
-
-const API_URL = 'https://sistema-creditos-backend.vercel.app/api';
+const API_URL = process.env.REACT_APP_API_URL || 'https://sistema-creditos-backend.vercel.app/api';
 
 export default function Simulador() {
   const { usuario, logout } = useAuth();
@@ -19,34 +17,81 @@ export default function Simulador() {
     capital: '',
     tasa: '',
     plazo: '',
-    fechaInicio: new Date().toISOString().split('T')[0]
+    fechaInicio: new Date().toISOString().split('T')[0],
+    fechaPrimerPago: ''
   });
   const [resultado, setResultado] = useState(null);
   const [cargando, setCargando] = useState(false);
   const [mostrarResultados, setMostrarResultados] = useState(false);
   const [guardando, setGuardando] = useState(false);
+  const [editandoCuota, setEditandoCuota] = useState(false);
+  const [cuotaEditada, setCuotaEditada] = useState('');
   const cotizacionRef = useRef(null);
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
+  // Calcular fecha sugerida para primera cuota (10 del mes siguiente al siguiente)
+  const calcularFechaSugerida = (fechaInicio) => {
+    const fecha = new Date(fechaInicio);
+    return new Date(fecha.getFullYear(), fecha.getMonth() + 2, 10);
+  };
+
+  // Cuando cambia la fecha de inicio, actualizar la fecha sugerida de primera cuota
+  const handleFechaInicioChange = (e) => {
+    const nuevaFecha = e.target.value;
+    const fechaSugerida = calcularFechaSugerida(nuevaFecha);
+    const fechaSugeridaStr = fechaSugerida.toISOString().split('T')[0];
+    setForm({
+      ...form,
+      fechaInicio: nuevaFecha,
+      fechaPrimerPago: fechaSugeridaStr
+    });
   };
 
   const handleSimular = async (e) => {
     e.preventDefault();
     setCargando(true);
     try {
+      const fechaPrimerPago = form.fechaPrimerPago ? new Date(form.fechaPrimerPago) : null;
       const res = await axios.post(`${API_URL}/credito/simular`, {
         capital: parseFloat(form.capital),
         tasa: parseFloat(form.tasa),
         plazo: parseInt(form.plazo),
-        fechaInicio: form.fechaInicio
+        fechaInicio: form.fechaInicio,
+        fechaPrimerPago: fechaPrimerPago
       });
       setResultado(res.data);
+      setCuotaEditada(res.data.cuotaRedondeada.toString());
       setMostrarResultados(true);
+      setEditandoCuota(false);
       toast.success('Simulación completada');
     } catch (error) {
       toast.error(error.response?.data?.message || 'Error al simular');
+    } finally {
+      setCargando(false);
+    }
+  };
+
+  const recalcularConCuotaEditada = async () => {
+    if (!cuotaEditada || parseFloat(cuotaEditada) <= 0) {
+      toast.error('Ingrese una cuota válida');
+      return;
+    }
+
+    setCargando(true);
+    try {
+      const fechaPrimerPago = form.fechaPrimerPago ? new Date(form.fechaPrimerPago) : null;
+      const res = await axios.post(`${API_URL}/credito/simular-con-cuota`, {
+        capital: parseFloat(form.capital),
+        tasa: parseFloat(form.tasa),
+        plazo: parseInt(form.plazo),
+        fechaInicio: form.fechaInicio,
+        fechaPrimerPago: fechaPrimerPago,
+        cuotaFija: parseFloat(cuotaEditada)
+      });
+      setResultado(res.data);
+      toast.success('Cuota actualizada y recalculada');
+      setEditandoCuota(false);
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Error al recalcular');
     } finally {
       setCargando(false);
     }
@@ -86,34 +131,23 @@ export default function Simulador() {
   };
 
   const generarPDF = () => {
-    if (!resultado) {
-      toast.error('No hay resultados para generar PDF');
-      return;
-    }
-
+    if (!resultado) return;
+    
     try {
-      // Crear documento PDF en formato landscape
-      const doc = new jsPDF({
-        orientation: 'landscape',
-        unit: 'mm',
-        format: 'a4'
-      });
+      const doc = new jsPDF('landscape');
       
-      // Header - Verde cooperativo
       doc.setFillColor(27, 94, 32);
       doc.rect(0, 0, 297, 35, 'F');
       doc.setTextColor(255, 255, 255);
       doc.setFontSize(18);
-      doc.text('CANTERA R.L.', 148.5, 20, { align: 'center' });
+      doc.text('SOCIETARIA CANTERA R.L.', 148.5, 20, { align: 'center' });
       doc.setFontSize(10);
       doc.text('Cooperativa de Ahorro y Crédito', 148.5, 30, { align: 'center' });
       
-      // Título
       doc.setTextColor(0, 0, 0);
       doc.setFontSize(14);
       doc.text('COTIZACIÓN DE CRÉDITO', 148.5, 50, { align: 'center' });
       
-      // Datos del crédito
       doc.setFontSize(10);
       doc.text(`Fecha: ${new Date().toLocaleDateString()}`, 20, 65);
       doc.text(`Solicitante: ${form.nombreSocio}`, 20, 75);
@@ -124,7 +158,6 @@ export default function Simulador() {
       doc.text(`Ahorro Total: Bs ${formatMoney(resultado.ahorroTotal)}`, 150, 85);
       doc.text(`Total a Pagar: Bs ${formatMoney(resultado.cuotaRedondeada * form.plazo)}`, 150, 95);
       
-      // Preparar datos para la tabla
       const tableColumn = ['N°', 'Fecha', 'Capital', 'Interés', 'Seguro', 'Total Real', 'Ahorro', 'Cuota', 'Saldo'];
       const tableRows = resultado.cuotas.map(cuota => [
         cuota.cuota,
@@ -138,61 +171,40 @@ export default function Simulador() {
         `Bs ${formatMoney(cuota.saldo)}`
       ]);
       
-      // Agregar tabla usando autoTable (importada correctamente)
-      autoTable(doc, {
+      doc.autoTable({
         startY: 115,
         head: [tableColumn],
         body: tableRows,
         theme: 'striped',
-        headStyles: {
-          fillColor: [27, 94, 32],
-          textColor: 255,
-          fontSize: 8,
-          fontStyle: 'bold'
-        },
-        bodyStyles: {
-          fontSize: 7,
-          cellPadding: 2
-        },
-        columnStyles: {
-          0: { cellWidth: 15, halign: 'center' },
-          1: { cellWidth: 25, halign: 'center' },
-          2: { cellWidth: 25, halign: 'right' },
-          3: { cellWidth: 25, halign: 'right' },
-          4: { cellWidth: 25, halign: 'right' },
-          5: { cellWidth: 25, halign: 'right' },
-          6: { cellWidth: 25, halign: 'right' },
-          7: { cellWidth: 25, halign: 'right' },
-          8: { cellWidth: 30, halign: 'right' }
-        }
+        headStyles: { fillColor: [27, 94, 32], textColor: 255 },
+        bodyStyles: { fontSize: 7, cellPadding: 2 }
       });
       
-      // Footer
       const finalY = doc.lastAutoTable.finalY + 10;
       doc.setFontSize(8);
       doc.setTextColor(100, 100, 100);
       doc.text('Esta cotización es una simulación. La tasa está sujeta a evaluación crediticia.', 148.5, finalY, { align: 'center' });
-      doc.text('               Cantera R.L.                  "', 148.5, finalY + 7, { align: 'center' });
+      doc.text('Societaria Cantera R.L. - "Ahorrando juntos, crecemos más"', 148.5, finalY + 7, { align: 'center' });
       
-      // Guardar PDF
-      const nombreArchivo = `cotizacion_${form.nombreSocio.replace(/\s/g, '_')}.pdf`;
-      doc.save(nombreArchivo);
-      toast.success('PDF descargado correctamente');
+      doc.save(`cotizacion_${form.nombreSocio.replace(/\s/g, '_')}.pdf`);
+      toast.success('PDF descargado');
     } catch (error) {
-      console.error('Error al generar PDF:', error);
-      toast.error('Error al generar PDF: ' + error.message);
+      console.error(error);
+      toast.error('Error al generar PDF');
     }
   };
 
   const handleNuevo = () => {
     setMostrarResultados(false);
     setResultado(null);
+    setEditandoCuota(false);
     setForm({
       nombreSocio: '',
       capital: '',
       tasa: '',
       plazo: '',
-      fechaInicio: new Date().toISOString().split('T')[0]
+      fechaInicio: new Date().toISOString().split('T')[0],
+      fechaPrimerPago: ''
     });
   };
 
@@ -210,9 +222,7 @@ export default function Simulador() {
           <div className="user-info">
             <span className="user-name">Bienvenido {usuario?.nombre}</span>
             {usuario?.rol === 'admin' && (
-              <Link to="/admin" className="btn-admin">
-                 Panel De Control
-              </Link>
+              <Link to="/admin" className="btn-admin">👑 Panel De Control</Link>
             )}
             <button onClick={handleLogout} className="btn-logout">Cerrar Sesión</button>
           </div>
@@ -223,14 +233,14 @@ export default function Simulador() {
         {!mostrarResultados ? (
           <div className="form-card">
             <div className="card-header">
-              <h2> SIMULADOR DE CRÉDITOS</h2>
+              <h2>📋 SIMULADOR DE CRÉDITOS</h2>
               <p>Complete los datos para obtener una cotización</p>
             </div>
             <form onSubmit={handleSimular}>
               <div className="card-body">
                 <div className="form-row">
                   <div className="form-group">
-                    <label> NOMBRE DEL SOCIO / INTERESADO *</label>
+                    <label>👤 NOMBRE DEL SOCIO / INTERESADO *</label>
                     <input
                       type="text"
                       required
@@ -238,10 +248,9 @@ export default function Simulador() {
                       value={form.nombreSocio}
                       onChange={(e) => setForm({...form, nombreSocio: e.target.value})}
                     />
-                    <small style={{ fontSize: '0.7rem', color: '#666' }}>Nombre completo del solicitante</small>
                   </div>
                   <div className="form-group">
-                    <label> MONTO DEL CRÉDITO (BOB)</label>
+                    <label>💰 MONTO DEL CRÉDITO (BOB)</label>
                     <input
                       type="number"
                       required
@@ -253,16 +262,27 @@ export default function Simulador() {
                 </div>
                 <div className="form-row">
                   <div className="form-group">
-                    <label> FECHA DE DESEMBOLSO</label>
+                    <label>📅 FECHA DE DESEMBOLSO</label>
                     <input
                       type="date"
                       required
                       value={form.fechaInicio}
-                      onChange={(e) => setForm({...form, fechaInicio: e.target.value})}
+                      onChange={handleFechaInicioChange}
                     />
                   </div>
                   <div className="form-group">
-                    <label> TASA DE INTERÉS (%)</label>
+                    <label>📅 FECHA PRIMER PAGO (Opcional)</label>
+                    <input
+                      type="date"
+                      value={form.fechaPrimerPago}
+                      onChange={(e) => setForm({...form, fechaPrimerPago: e.target.value})}
+                    />
+                    <small>Dejar vacío para calcular automáticamente (10 del mes siguiente al siguiente)</small>
+                  </div>
+                </div>
+                <div className="form-row">
+                  <div className="form-group">
+                    <label>📈 TASA DE INTERÉS (%)</label>
                     <input
                       type="number"
                       step="0.01"
@@ -284,7 +304,7 @@ export default function Simulador() {
                   </div>
                 </div>
                 <button type="submit" disabled={cargando} className="btn-simular">
-                  {cargando ? '🔄 CALCULANDO...' : ' SIMULAR CRÉDITO'}
+                  {cargando ? '🔄 CALCULANDO...' : '🔍 SIMULAR CRÉDITO'}
                 </button>
               </div>
             </form>
@@ -297,30 +317,35 @@ export default function Simulador() {
               </div>
               <div className="card-body">
                 <div className="summary-grid">
-                  <div className="info-item">
-                    <span className="info-label">Solicitante:</span>
-                    <span className="info-value">{form.nombreSocio}</span>
+                  <div className="info-item"><span className="info-label">Solicitante:</span><span className="info-value">{form.nombreSocio}</span></div>
+                  <div className="info-item"><span className="info-label">Monto:</span><span className="info-value">Bs {formatMoney(parseFloat(form.capital))}</span></div>
+                  <div className="info-item"><span className="info-label">Tasa:</span><span className="info-value">{form.tasa}%</span></div>
+                  <div className="info-item"><span className="info-label">Plazo:</span><span className="info-value">{form.plazo} meses</span></div>
+                  <div className="info-item"><span className="info-label">Cuota Fija:</span>
+                    <span className="info-value">
+                      {editandoCuota ? (
+                        <input
+                          type="number"
+                          value={cuotaEditada}
+                          onChange={(e) => setCuotaEditada(e.target.value)}
+                          style={{ width: '120px', padding: '5px', borderRadius: '5px', border: '1px solid #ccc' }}
+                        />
+                      ) : (
+                        `Bs ${formatMoney(resultado.cuotaRedondeada)}`
+                      )}
+                    </span>
                   </div>
-                  <div className="info-item">
-                    <span className="info-label">Monto:</span>
-                    <span className="info-value">Bs {formatMoney(parseFloat(form.capital))}</span>
-                  </div>
-                  <div className="info-item">
-                    <span className="info-label">Tasa:</span>
-                    <span className="info-value">{form.tasa}%</span>
-                  </div>
-                  <div className="info-item">
-                    <span className="info-label">Plazo:</span>
-                    <span className="info-value">{form.plazo} meses</span>
-                  </div>
-                  <div className="info-item">
-                    <span className="info-label">Cuota Fija:</span>
-                    <span className="info-value">Bs {formatMoney(resultado.cuotaRedondeada)}</span>
-                  </div>
-                  <div className="info-item">
-                    <span className="info-label">Ahorro Total:</span>
-                    <span className="info-value text-success">Bs {formatMoney(resultado.ahorroTotal)}</span>
-                  </div>
+                  <div className="info-item"><span className="info-label">Ahorro Total:</span><span className="info-value text-success">Bs {formatMoney(resultado.ahorroTotal)}</span></div>
+                </div>
+                <div style={{ display: 'flex', gap: '10px', marginTop: '15px', justifyContent: 'flex-end' }}>
+                  {!editandoCuota ? (
+                    <button className="btn-nuevo" onClick={() => setEditandoCuota(true)}>✏️ EDITAR CUOTA</button>
+                  ) : (
+                    <>
+                      <button className="btn-guardar" onClick={recalcularConCuotaEditada}>💾 GUARDAR CAMBIOS</button>
+                      <button className="btn-cancelar" onClick={() => { setEditandoCuota(false); setCuotaEditada(resultado.cuotaRedondeada.toString()); }}>❌ CANCELAR</button>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
@@ -330,14 +355,10 @@ export default function Simulador() {
                 <h3>📊 TABLA DE AMORTIZACIÓN</h3>
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
                   <button onClick={handleGuardarInteres} disabled={guardando} className="btn-guardar">
-                    {guardando ? ' GUARDANDO...' : ' REGISTRAR INTERÉS'}
+                    {guardando ? '💾 GUARDANDO...' : '📝 REGISTRAR INTERÉS'}
                   </button>
-                  <button onClick={handleNuevo} className="btn-nuevo">
-                     NUEVA SIMULACIÓN
-                  </button>
-                  <button onClick={generarPDF} className="btn-pdf">
-                     DESCARGAR PDF
-                  </button>
+                  <button onClick={handleNuevo} className="btn-nuevo">✨ NUEVA SIMULACIÓN</button>
+                  <button onClick={generarPDF} className="btn-pdf">📥 DESCARGAR PDF</button>
                 </div>
               </div>
               <div className="card-body">
@@ -354,7 +375,7 @@ export default function Simulador() {
                         <td>0</td><td>{formatDate(form.fechaInicio)}</td>
                         <td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td>
                         <td><strong>Bs {formatMoney(parseFloat(form.capital))}</strong></td>
-                      </tr>
+                       </tr>
                       {resultado.cuotas && resultado.cuotas.map((cuota, idx) => (
                         <tr key={idx}>
                           <td style={{ textAlign: 'center' }}>{cuota.cuota}</td>
