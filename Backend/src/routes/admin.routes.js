@@ -1,6 +1,6 @@
-import express from 'express';
-import { verificarToken, verificarAdmin } from '../middleware/auth.js';
-import { 
+const express = require('express');
+const { verificarToken, verificarAdmin } = require('../middleware/auth');
+const { 
   listarUsuarios, 
   crearUsuario, 
   actualizarUsuario,
@@ -9,7 +9,7 @@ import {
   listarTodasSimulaciones,
   actualizarEstadoRegistro,
   buscarRegistros
-} from '../controllers/admin.controller.js';
+} = require('../controllers/admin.controller');
 
 const router = express.Router();
 
@@ -25,4 +25,4 @@ router.get('/simulaciones', listarTodasSimulaciones);
 router.put('/registros-interes/:id/estado', actualizarEstadoRegistro);
 router.get('/registros-interes/buscar', buscarRegistros);
 
-export default router;
+module.exports = router;

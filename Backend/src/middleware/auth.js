@@ -1,6 +1,6 @@
-import jwt from 'jsonwebtoken';
+const jwt = require('jsonwebtoken');
 
-export const verificarToken = (req, res, next) => {
+const verificarToken = (req, res, next) => {
   const token = req.header('Authorization')?.replace('Bearer ', '');
   
   if (!token) {
@@ -16,9 +16,11 @@ export const verificarToken = (req, res, next) => {
   }
 };
 
-export const verificarAdmin = (req, res, next) => {
+const verificarAdmin = (req, res, next) => {
   if (req.usuario.rol !== 'admin') {
     return res.status(403).json({ message: 'Acceso denegado. Se requieren permisos de administrador' });
   }
   next();
 };
+
+module.exports = { verificarToken, verificarAdmin };

@@ -1,6 +1,6 @@
-import express from 'express';
-import { verificarToken } from '../middleware/auth.js';
-import { simularCredito, getHistorialSimulaciones, registrarInteres } from '../controllers/credito.controller.js';
+const express = require('express');
+const { verificarToken } = require('../middleware/auth');
+const { simularCredito, getHistorialSimulaciones, registrarInteres } = require('../controllers/credito.controller');
 
 const router = express.Router();
 
@@ -10,4 +10,4 @@ router.post('/simular', simularCredito);
 router.get('/historial', getHistorialSimulaciones);
 router.post('/registrar-interes', registrarInteres);
 
-export default router;
+module.exports = router;

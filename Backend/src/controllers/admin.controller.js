@@ -1,21 +1,19 @@
-import { pool } from '../config/database.js';
-import bcrypt from 'bcryptjs';
+const { pool } = require('../config/database');
+const bcrypt = require('bcryptjs');
 
-export const listarUsuarios = async (req, res) => {
+const listarUsuarios = async (req, res) => {
   try {
-    console.log('📋 [ADMIN] Listando usuarios');
     const query = `SELECT id, nombre, email, telefono, rol, activo FROM usuarios ORDER BY id DESC`;
     const result = await pool.query(query);
     res.status(200).json(result.rows);
   } catch (error) {
-    console.error('❌ Error en listarUsuarios:', error.message);
+    console.error('Error en listarUsuarios:', error.message);
     res.status(500).json({ message: 'Error al listar usuarios', error: error.message });
   }
 };
 
-export const listarRegistrosInteres = async (req, res) => {
+const listarRegistrosInteres = async (req, res) => {
   try {
-    console.log('📋 [ADMIN] Listando registros de interés');
     const query = `
       SELECT ri.*, u.nombre as usuario_registro 
       FROM registros_interes ri 
@@ -25,24 +23,28 @@ export const listarRegistrosInteres = async (req, res) => {
     const result = await pool.query(query);
     res.json(result.rows);
   } catch (error) {
-    console.error('❌ Error en listarRegistrosInteres:', error.message);
+    console.error('Error en listarRegistrosInteres:', error.message);
     res.status(500).json({ message: 'Error al listar registros', error: error.message });
   }
 };
 
-export const listarTodasSimulaciones = async (req, res) => {
+const listarTodasSimulaciones = async (req, res) => {
   try {
-    console.log('📋 [ADMIN] Listando simulaciones');
-    const query = `SELECT * FROM simulaciones ORDER BY id DESC LIMIT 100`;
+    const query = `
+      SELECT s.*, u.nombre as usuario_nombre 
+      FROM simulaciones s 
+      LEFT JOIN usuarios u ON s.usuario_id = u.id 
+      ORDER BY s.id DESC LIMIT 100
+    `;
     const result = await pool.query(query);
     res.json(result.rows);
   } catch (error) {
-    console.error('❌ Error en listarTodasSimulaciones:', error.message);
+    console.error('Error en listarTodasSimulaciones:', error.message);
     res.status(500).json({ message: 'Error al listar simulaciones', error: error.message });
   }
 };
 
-export const actualizarEstadoRegistro = async (req, res) => {
+const actualizarEstadoRegistro = async (req, res) => {
   try {
     const { id } = req.params;
     const { estado } = req.body;
@@ -53,12 +55,12 @@ export const actualizarEstadoRegistro = async (req, res) => {
     }
     res.json({ success: true, registro: result.rows[0] });
   } catch (error) {
-    console.error('❌ Error en actualizarEstadoRegistro:', error.message);
+    console.error('Error en actualizarEstadoRegistro:', error.message);
     res.status(500).json({ message: 'Error al actualizar estado', error: error.message });
   }
 };
 
-export const crearUsuario = async (req, res) => {
+const crearUsuario = async (req, res) => {
   try {
     const { nombre, email, telefono, password, rol } = req.body;
     const passwordHash = await bcrypt.hash(password, 10);
@@ -67,17 +69,16 @@ export const crearUsuario = async (req, res) => {
     const result = await pool.query(query, values);
     res.json({ success: true, usuario: result.rows[0] });
   } catch (error) {
-    console.error('❌ Error en crearUsuario:', error.message);
+    console.error('Error en crearUsuario:', error.message);
     res.status(500).json({ message: 'Error al crear usuario', error: error.message });
   }
 };
 
-export const actualizarUsuario = async (req, res) => {
+const actualizarUsuario = async (req, res) => {
   try {
     const { id } = req.params;
     const { rol } = req.body;
     
-    // No permitir cambiar el propio rol
     if (parseInt(id) === req.usuario.id) {
       return res.status(400).json({ message: 'No puedes cambiar tu propio rol' });
     }
@@ -91,12 +92,12 @@ export const actualizarUsuario = async (req, res) => {
     
     res.json({ success: true, usuario: result.rows[0] });
   } catch (error) {
-    console.error('❌ Error en actualizarUsuario:', error.message);
+    console.error('Error en actualizarUsuario:', error.message);
     res.status(500).json({ message: 'Error al actualizar usuario', error: error.message });
   }
 };
 
-export const eliminarUsuario = async (req, res) => {
+const eliminarUsuario = async (req, res) => {
   try {
     const { id } = req.params;
     
@@ -113,12 +114,12 @@ export const eliminarUsuario = async (req, res) => {
     
     res.json({ success: true, message: 'Usuario eliminado correctamente' });
   } catch (error) {
-    console.error('❌ Error en eliminarUsuario:', error.message);
+    console.error('Error en eliminarUsuario:', error.message);
     res.status(500).json({ message: 'Error al eliminar usuario', error: error.message });
   }
 };
 
-export const buscarRegistros = async (req, res) => {
+const buscarRegistros = async (req, res) => {
   try {
     const { fechaInicio, fechaFin, nombre } = req.query;
     
@@ -148,7 +149,18 @@ export const buscarRegistros = async (req, res) => {
     const result = await pool.query(query, params);
     res.json(result.rows);
   } catch (error) {
-    console.error('❌ Error en buscarRegistros:', error.message);
+    console.error('Error en buscarRegistros:', error.message);
     res.status(500).json({ message: 'Error al buscar registros', error: error.message });
   }
+};
+
+module.exports = {
+  listarUsuarios,
+  listarRegistrosInteres,
+  listarTodasSimulaciones,
+  actualizarEstadoRegistro,
+  crearUsuario,
+  actualizarUsuario,
+  eliminarUsuario,
+  buscarRegistros
 };

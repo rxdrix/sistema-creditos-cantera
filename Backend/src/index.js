@@ -1,22 +1,12 @@
-import dotenv from 'dotenv';
-import path from 'path';
-import { fileURLToPath } from 'url';
+const express = require('express');
+const cors = require('cors');
+const dotenv = require('dotenv');
+const { pool } = require('./config/database');
+const authRoutes = require('./routes/auth.routes');
+const creditoRoutes = require('./routes/credito.routes');
+const adminRoutes = require('./routes/admin.routes');
 
-// IMPORTANTE: Cargar .env ANTES que cualquier otra cosa
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-dotenv.config({ path: path.resolve(__dirname, '../.env') });
-
-// Verificar que se cargó
-console.log('🔍 DB_URL:', process.env.DB_URL ? '✅ Cargada correctamente' : '❌ No cargada');
-console.log('🔍 PORT:', process.env.PORT || '5000');
-
-import express from 'express';
-import cors from 'cors';
-import { pool } from './config/database.js';
-import authRoutes from './routes/auth.routes.js';
-import creditoRoutes from './routes/credito.routes.js';
-import adminRoutes from './routes/admin.routes.js';
+dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -33,6 +23,14 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date() });
 });
 
-app.listen(PORT, () => {
-  console.log(`✅ Servidor corriendo en puerto ${PORT}`);
+app.get('/', (req, res) => {
+  res.json({ message: 'API Societaria Cantera R.L.' });
 });
+
+if (process.env.NODE_ENV !== 'production') {
+  app.listen(PORT, () => {
+    console.log(`✅ Servidor corriendo en puerto ${PORT}`);
+  });
+}
+
+module.exports = app;

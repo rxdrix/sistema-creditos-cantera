@@ -1,8 +1,8 @@
-import { pool } from '../config/database.js';
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
+const { pool } = require('../config/database');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 
-export const register = async (req, res) => {
+const register = async (req, res) => {
   try {
     const { nombre, email, telefono, password } = req.body;
     
@@ -39,7 +39,7 @@ export const register = async (req, res) => {
   }
 };
 
-export const login = async (req, res) => {
+const login = async (req, res) => {
   try {
     const { email, password } = req.body;
     
@@ -83,7 +83,7 @@ export const login = async (req, res) => {
   }
 };
 
-export const getPerfil = async (req, res) => {
+const getPerfil = async (req, res) => {
   try {
     const result = await pool.query(
       'SELECT id, nombre, email, telefono, rol, fecha_registro FROM usuarios WHERE id = $1',
@@ -96,3 +96,5 @@ export const getPerfil = async (req, res) => {
     res.status(500).json({ message: 'Error en el servidor' });
   }
 };
+
+module.exports = { register, login, getPerfil };
