@@ -17,7 +17,7 @@ try {
   console.log('jspdf no instalado - ejecutar: npm install jspdf jspdf-autotable');
 }
 
-const API_URL = 'http://localhost:5000/api';
+const API_URL = 'https://sistema-creditos-backend.vercel.app/api';
 
 function AdminDashboard() {
   const { usuario, logout } = useAuth();
