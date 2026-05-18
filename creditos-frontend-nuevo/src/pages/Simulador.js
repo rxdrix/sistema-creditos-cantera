@@ -9,7 +9,7 @@ import './Simulador.css';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
-const API_URL = 'http://localhost:5000/api';
+const API_URL = 'https://sistema-creditos-backend.vercel.app/api';
 
 export default function Simulador() {
   const { usuario, logout } = useAuth();
