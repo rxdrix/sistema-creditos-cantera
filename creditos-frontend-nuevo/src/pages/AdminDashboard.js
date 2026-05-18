@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
@@ -14,7 +14,7 @@ try {
   jsPDF = jspdf.jsPDF;
   autoTable = jspdfAutotable.default;
 } catch (e) {
-  console.log('jspdf no instalado - ejecutar: npm install jspdf jspdf-autotable');
+  console.log('jspdf no instalado');
 }
 
 const API_URL = 'https://sistema-creditos-backend.vercel.app/api';
@@ -33,10 +33,13 @@ function AdminDashboard() {
   const [fechaFin, setFechaFin] = useState('');
   const [nombreBuscar, setNombreBuscar] = useState('');
   const [filtroActivo, setFiltroActivo] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const cargadoRef = useRef(false);
 
-  // Función para cargar datos - usando useCallback
+  // Función para cargar datos
   const cargarDatos = useCallback(async () => {
-    setLoading(true);
+    if (isLoading) return;
+    setIsLoading(true);
     try {
       const [usuariosRes, registrosRes, simulacionesRes] = await Promise.all([
         axios.get(`${API_URL}/admin/usuarios`),
@@ -47,6 +50,7 @@ function AdminDashboard() {
       setRegistrosInteres(registrosRes.data);
       setSimulaciones(simulacionesRes.data);
     } catch (error) {
+      console.error('Error al cargar datos:', error);
       if (error.response?.status === 401) {
         toast.error('Sesión expirada');
         logout();
@@ -55,15 +59,17 @@ function AdminDashboard() {
         toast.error('Error al cargar datos');
       }
     } finally {
+      setIsLoading(false);
       setLoading(false);
     }
   }, [logout, navigate]);
 
-  // useEffect corregido - solo se ejecuta cuando usuario cambia
+  // useEffect solo para carga inicial
   useEffect(() => {
     if (usuario && usuario.rol !== 'admin') {
       navigate('/simulador');
-    } else if (usuario && usuario.rol === 'admin') {
+    } else if (usuario && usuario.rol === 'admin' && !cargadoRef.current) {
+      cargadoRef.current = true;
       cargarDatos();
     } else if (!usuario) {
       setLoading(false);
@@ -111,7 +117,7 @@ function AdminDashboard() {
 
   const descargarReportePDF = () => {
     if (!jsPDF) {
-      toast.error('Librería PDF no instalada. Ejecute: npm install jspdf jspdf-autotable');
+      toast.error('Librería PDF no instalada');
       return;
     }
     
@@ -306,6 +312,7 @@ function AdminDashboard() {
     return new Date(date).toLocaleDateString('es-ES');
   };
 
+  // Mostrar pantalla de carga solo la primera vez
   if (loading) {
     return <div className="admin-container"><div className="admin-main">Cargando datos...</div></div>;
   }
@@ -325,7 +332,7 @@ function AdminDashboard() {
           </div>
         </div>
         <div className="user-info">
-          <span> Administrador: {usuario?.nombre}</span>
+          <span>👑 Admin: {usuario?.nombre}</span>
           <button onClick={handleLogout} className="btn-logout">Cerrar Sesión</button>
         </div>
       </header>
@@ -352,9 +359,7 @@ function AdminDashboard() {
             <div className="table-responsive">
               <table className="data-table">
                 <thead>
-                  <tr>
-                    <th>ID</th><th>Nombre</th><th>Email</th><th>Teléfono</th><th>Rol</th><th>Estado</th><th>Acciones</th>
-                  </tr>
+                  <tr><th>ID</th><th>Nombre</th><th>Email</th><th>Teléfono</th><th>Rol</th><th>Estado</th><th>Acciones</th></tr>
                 </thead>
                 <tbody>
                   {usuarios.map(user => (
@@ -365,11 +370,11 @@ function AdminDashboard() {
                       <td>{user.telefono || '-'}</td>
                       <td>
                         {user.id === usuario?.id ? (
-                          <span className="badge-admin"> Administrador</span>
+                          <span className="badge-admin">👑 Administrador</span>
                         ) : (
                           <select value={user.rol} onChange={(e) => actualizarRol(user.id, e.target.value)} className="rol-select">
-                            <option value="usuario"> Usuario</option>
-                            <option value="admin"> Administrador</option>
+                            <option value="usuario">👤 Usuario</option>
+                            <option value="admin">👑 Administrador</option>
                           </select>
                         )}
                       </td>
@@ -386,7 +391,7 @@ function AdminDashboard() {
         {activeTab === 'solicitudes' && (
           <div className="card">
             <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
-              <h3>Solicitudes de Crédito</h3>
+              <h3>📞 Solicitudes de Crédito</h3>
               <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                 <input type="date" value={fechaInicio} onChange={(e) => setFechaInicio(e.target.value)} className="date-input" />
                 <input type="date" value={fechaFin} onChange={(e) => setFechaFin(e.target.value)} className="date-input" />
@@ -399,9 +404,7 @@ function AdminDashboard() {
             <div className="table-responsive">
               <table className="data-table">
                 <thead>
-                  <tr>
-                    <th>ID</th><th>Nombre</th><th>Email</th><th>Teléfono</th><th>Monto</th><th>Plazo</th><th>Estado</th><th>Registrado por</th><th>Fecha</th>
-                  </tr>
+                  <tr><th>ID</th><th>Nombre</th><th>Email</th><th>Teléfono</th><th>Monto</th><th>Plazo</th><th>Estado</th><th>Registrado por</th><th>Fecha</th></tr>
                 </thead>
                 <tbody>
                   {registrosInteres.map(reg => (
@@ -413,11 +416,7 @@ function AdminDashboard() {
                       <td>Bs {formatMoney(reg.monto_interes)}</td>
                       <td>{reg.plazo_interes || '-'} meses</td>
                       <td>
-                        <select 
-                          value={reg.estado || 'pendiente'} 
-                          onChange={(e) => actualizarEstadoRegistro(reg.id, e.target.value)}
-                          className={`estado-select ${reg.estado || 'pendiente'}`}
-                        >
+                        <select value={reg.estado || 'pendiente'} onChange={(e) => actualizarEstadoRegistro(reg.id, e.target.value)} className={`estado-select ${reg.estado || 'pendiente'}`}>
                           <option value="pendiente">⏳ Pendiente</option>
                           <option value="contactado">📞 Contactado</option>
                           <option value="aprobado">✅ Aprobado</option>
@@ -435,36 +434,43 @@ function AdminDashboard() {
         )}
 
         {activeTab === 'simulaciones' && (
-          <div className="card">
-            <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h3>📊 Historial de Simulaciones</h3>
-              <button className="btn-download" onClick={generarPDFSimulaciones}> Descargar PDF</button>
-            </div>
-            <div className="table-responsive">
-              <table className="data-table">
-                <thead>
-                  <tr>
-                    <th>ID</th><th>Usuario</th><th>Monto</th><th>Tasa</th><th>Plazo</th><th>Cuota Fija</th><th>Ahorro</th><th>Fecha</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {simulaciones.map(sim => (
-                    <tr key={sim.id}>
-                      <td>{sim.id}</td>
-                      <td>{sim.usuario_nombre || sim.usuario_id || '-'}</td>
-                      <td>Bs {formatMoney(sim.capital_actual)}</td>
-                      <td>{sim.tasa_actual}%</td>
-                      <td>{sim.plazo_actual} meses</td>
-                      <td><strong>Bs {formatMoney(sim.cuota_redondeada)}</strong></td>
-                      <td>Bs {formatMoney(sim.ahorro_total)}</td>
-                      <td>{formatDate(sim.fecha_simulacion)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
+  <div className="card">
+    <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <h3>📊 Historial de Simulaciones</h3>
+      <button className="btn-download" onClick={generarPDFSimulaciones}>📥 Descargar PDF</button>
+    </div>
+    <div className="table-responsive">
+      <table className="data-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Usuario</th>
+            <th>Monto</th>
+            <th>Tasa</th>
+            <th>Plazo</th>
+            <th>Cuota Fija</th>
+            <th>Ahorro</th>
+            <th>Fecha</th>
+          </tr>
+        </thead>
+        <tbody>
+          {simulaciones.map(sim => (
+            <tr key={sim.id}>
+              <td>{sim.id}</td>
+              <td>{sim.usuario_nombre || sim.usuario_id || '-'}</td>
+              <td>Bs {formatMoney(sim.capital_actual)}</td>
+              <td>{sim.tasa_actual}%</td>
+              <td>{sim.plazo_actual} meses</td>
+              <td><strong>Bs {formatMoney(sim.cuota_redondeada)}</strong></td>
+              <td>Bs {formatMoney(sim.ahorro_total)}</td>
+              <td>{formatDate(sim.fecha_simulacion)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </div>
+)}
       </div>
 
       {showModal && (
@@ -477,8 +483,8 @@ function AdminDashboard() {
               <input type="tel" placeholder="Teléfono" value={nuevoUsuario.telefono} onChange={(e) => setNuevoUsuario({...nuevoUsuario, telefono: e.target.value})} />
               <input type="password" placeholder="Contraseña" required value={nuevoUsuario.password} onChange={(e) => setNuevoUsuario({...nuevoUsuario, password: e.target.value})} />
               <select value={nuevoUsuario.rol} onChange={(e) => setNuevoUsuario({...nuevoUsuario, rol: e.target.value})}>
-                <option value="usuario"> Usuario</option>
-                <option value="admin"> Administrador</option>
+                <option value="usuario">👤 Usuario</option>
+                <option value="admin">👑 Administrador</option>
               </select>
               <div className="modal-buttons">
                 <button type="button" className="btn-cancel" onClick={() => { setShowModal(false); setNuevoUsuario({ nombre: '', email: '', telefono: '', password: '', rol: 'usuario' }); }}>Cancelar</button>
