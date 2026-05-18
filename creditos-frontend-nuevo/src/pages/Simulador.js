@@ -33,6 +33,7 @@ export default function Simulador() {
     navigate('/login');
   };
 
+  
   const calcularFechaSugerida = (fechaInicio) => {
     const fecha = new Date(fechaInicio);
     return new Date(fecha.getFullYear(), fecha.getMonth() + 2, 10);
