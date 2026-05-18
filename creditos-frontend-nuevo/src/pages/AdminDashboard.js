@@ -188,7 +188,7 @@ function AdminDashboard() {
       doc.rect(0, 0, 297, 30, 'F');
       doc.setTextColor(255, 255, 255);
       doc.setFontSize(16);
-      doc.text('SOCIETARIA CANTERA R.L.', 148.5, 20, { align: 'center' });
+      doc.text('COOPERATIVA CANTERA R.L.', 148.5, 20, { align: 'center' });
       
       doc.setTextColor(0, 0, 0);
       doc.setFontSize(12);
@@ -369,7 +369,7 @@ function AdminDashboard() {
         <div className="logo-area">
           <img src="/icon.png" alt="Societaria Cantera" className="logo-icon" />
           <div>
-            <h1>Societaria Cantera R.L.</h1>
+            <h1>Cooperativa Cantera R.L.</h1>
             <p>Panel de Administración</p>
           </div>
         </div>
@@ -395,7 +395,7 @@ function AdminDashboard() {
         {activeTab === 'usuarios' && (
           <div className="card">
             <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h3>👥 Usuarios Registrados</h3>
+              <h3>Usuarios Registrados</h3>
               <button className="btn-primary" onClick={() => setShowModal(true)}>➕ Nuevo Usuario</button>
             </div>
             <div className="table-responsive">
