@@ -362,7 +362,7 @@ function AdminDashboard() {
           </div>
         </div>
         <div className="user-info">
-          <span>👑 Admin: {usuario?.nombre}</span>
+          <span> Admin: {usuario?.nombre}</span>
           <button onClick={handleLogout} className="btn-logout">Cerrar Sesión</button>
         </div>
       </header>
@@ -402,11 +402,11 @@ function AdminDashboard() {
                       <td>{user.telefono || '-'}</td>
                       <td>
                         {user.id === usuario?.id ? (
-                          <span className="badge-admin">👑 Administrador</span>
+                          <span className="badge-admin"> Administrador</span>
                         ) : (
                           <select value={user.rol} onChange={(e) => actualizarRol(user.id, e.target.value)} className="rol-select">
-                            <option value="usuario">👤 Usuario</option>
-                            <option value="admin">👑 Administrador</option>
+                            <option value="usuario"> Usuario</option>
+                            <option value="admin"> Administrador</option>
                           </select>
                         )}
                       </td>
@@ -428,9 +428,9 @@ function AdminDashboard() {
                 <input type="date" value={fechaInicio} onChange={(e) => setFechaInicio(e.target.value)} className="date-input" />
                 <input type="date" value={fechaFin} onChange={(e) => setFechaFin(e.target.value)} className="date-input" />
                 <input type="text" value={nombreBuscar} onChange={(e) => setNombreBuscar(e.target.value)} className="date-input" placeholder="Buscar por nombre" />
-                <button className="btn-search" onClick={buscarRegistros}>🔍 Buscar</button>
-                {filtroActivo && <button className="btn-clear" onClick={limpiarFiltro}>🗑️ Limpiar</button>}
-                <button className="btn-download" onClick={descargarReportePDF}>📥 Descargar PDF</button>
+                <button className="btn-search" onClick={buscarRegistros}> Buscar</button>
+                {filtroActivo && <button className="btn-clear" onClick={limpiarFiltro}> Limpiar</button>}
+                <button className="btn-download" onClick={descargarReportePDF}> Descargar PDF</button>
               </div>
             </div>
             <div className="table-responsive">
@@ -451,10 +451,10 @@ function AdminDashboard() {
                       <td>{reg.plazo_interes || '-'} meses</td>
                       <td>
                         <select value={reg.estado || 'pendiente'} onChange={(e) => actualizarEstadoRegistro(reg.id, e.target.value)} className={`estado-select ${reg.estado || 'pendiente'}`}>
-                          <option value="pendiente">⏳ Pendiente</option>
-                          <option value="contactado">📞 Contactado</option>
-                          <option value="aprobado">✅ Aprobado</option>
-                          <option value="rechazado">❌ Rechazado</option>
+                          <option value="pendiente"> Pendiente</option>
+                          <option value="contactado"> Contactado</option>
+                          <option value="aprobado"> Aprobado</option>
+                          <option value="rechazado"> Rechazado</option>
                         </select>
                       </td>
                       <td>{reg.usuario_registro || 'Usuario web'}</td>
@@ -510,8 +510,8 @@ function AdminDashboard() {
               <input type="tel" placeholder="Teléfono" value={nuevoUsuario.telefono} onChange={(e) => setNuevoUsuario({...nuevoUsuario, telefono: e.target.value})} />
               <input type="password" placeholder="Contraseña" required value={nuevoUsuario.password} onChange={(e) => setNuevoUsuario({...nuevoUsuario, password: e.target.value})} />
               <select value={nuevoUsuario.rol} onChange={(e) => setNuevoUsuario({...nuevoUsuario, rol: e.target.value})}>
-                <option value="usuario">👤 Usuario</option>
-                <option value="admin">👑 Administrador</option>
+                <option value="usuario"> Usuario</option>
+                <option value="admin"> Administrador</option>
               </select>
               <div className="modal-buttons">
                 <button type="button" className="btn-cancel" onClick={() => { setShowModal(false); setNuevoUsuario({ nombre: '', email: '', telefono: '', password: '', rol: 'usuario' }); }}>Cancelar</button>
