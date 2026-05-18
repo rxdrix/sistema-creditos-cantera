@@ -72,19 +72,34 @@ export const AuthProvider = ({ children }) => {
   }, [handleUserActivity, resetTemporizador]);
 
   const login = async (email, password) => {
-    try {
-      const res = await axios.post(`${API_URL}/auth/login`, { email, password });
+  try {
+    console.log('📡 Enviando login a:', `${API_URL}/auth/login`);
+    console.log('📡 Credenciales:', { email, password: '***' });
+    
+    const res = await axios.post(`${API_URL}/auth/login`, { email, password });
+    
+    console.log('📥 Respuesta completa:', res.data);
+    console.log('🔑 Token recibido:', res.data.token ? 'Sí' : 'No');
+    
+    if (res.data.token) {
       localStorage.setItem('token', res.data.token);
       axios.defaults.headers.common['Authorization'] = `Bearer ${res.data.token}`;
       setUsuario(res.data.usuario);
       resetTemporizador();
       toast.success(`Bienvenido ${res.data.usuario.nombre}`);
+      console.log('✅ Token guardado en localStorage');
       return true;
-    } catch (error) {
-      toast.error(error.response?.data?.message || 'Error al iniciar sesión');
+    } else {
+      console.error('❌ No se recibió token en la respuesta');
+      toast.error('Error al iniciar sesión');
       return false;
     }
-  };
+  } catch (error) {
+    console.error('❌ Error en login:', error.response?.data || error.message);
+    toast.error(error.response?.data?.message || 'Error al iniciar sesión');
+    return false;
+  }
+};
 
   const register = async (data) => {
     try {
