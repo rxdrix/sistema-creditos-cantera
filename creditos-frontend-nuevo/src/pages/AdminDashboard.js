@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
@@ -34,13 +34,8 @@ function AdminDashboard() {
   const [nombreBuscar, setNombreBuscar] = useState('');
   const [filtroActivo, setFiltroActivo] = useState(false);
 
-  useEffect(() => {
-  if (usuario && usuario.rol !== 'admin') {
-    navigate('/simulador');
-  }
-  cargarDatos();
-}, [usuario, navigate]);
-  const cargarDatos = async () => {
+  // Función para cargar datos - usando useCallback
+  const cargarDatos = useCallback(async () => {
     setLoading(true);
     try {
       const [usuariosRes, registrosRes, simulacionesRes] = await Promise.all([
@@ -52,11 +47,28 @@ function AdminDashboard() {
       setRegistrosInteres(registrosRes.data);
       setSimulaciones(simulacionesRes.data);
     } catch (error) {
-      toast.error('Error al cargar datos');
+      if (error.response?.status === 401) {
+        toast.error('Sesión expirada');
+        logout();
+        navigate('/login');
+      } else {
+        toast.error('Error al cargar datos');
+      }
     } finally {
       setLoading(false);
     }
-  };
+  }, [logout, navigate]);
+
+  // useEffect corregido - solo se ejecuta cuando usuario cambia
+  useEffect(() => {
+    if (usuario && usuario.rol !== 'admin') {
+      navigate('/simulador');
+    } else if (usuario && usuario.rol === 'admin') {
+      cargarDatos();
+    } else if (!usuario) {
+      setLoading(false);
+    }
+  }, [usuario, navigate, cargarDatos]);
 
   const buscarRegistros = async () => {
     if (!fechaInicio && !fechaFin && !nombreBuscar) {
@@ -313,7 +325,7 @@ function AdminDashboard() {
           </div>
         </div>
         <div className="user-info">
-          <span> Admin: {usuario?.nombre}</span>
+          <span> Administrador: {usuario?.nombre}</span>
           <button onClick={handleLogout} className="btn-logout">Cerrar Sesión</button>
         </div>
       </header>
@@ -374,7 +386,7 @@ function AdminDashboard() {
         {activeTab === 'solicitudes' && (
           <div className="card">
             <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
-              <h3>📞 Solicitudes de Crédito</h3>
+              <h3>Solicitudes de Crédito</h3>
               <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                 <input type="date" value={fechaInicio} onChange={(e) => setFechaInicio(e.target.value)} className="date-input" />
                 <input type="date" value={fechaFin} onChange={(e) => setFechaFin(e.target.value)} className="date-input" />
@@ -426,7 +438,7 @@ function AdminDashboard() {
           <div className="card">
             <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h3>📊 Historial de Simulaciones</h3>
-              <button className="btn-download" onClick={generarPDFSimulaciones}>📥 Descargar PDF</button>
+              <button className="btn-download" onClick={generarPDFSimulaciones}> Descargar PDF</button>
             </div>
             <div className="table-responsive">
               <table className="data-table">
