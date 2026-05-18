@@ -11,14 +11,34 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-app.use(cors());
+// Configurar CORS correctamente
+const corsOptions = {
+  origin: [
+    'https://sistema-creditos-cantera.vercel.app',
+    'https://sistema-creditos-cantera.vercel.app/',
+    'http://localhost:3000',
+    'http://localhost:3001'
+  ],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
+  optionsSuccessStatus: 200
+};
+
+app.use(cors(corsOptions));
+
+// Middleware para manejar preflight requests
+app.options('*', cors(corsOptions));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Rutas
 app.use('/api/auth', authRoutes);
 app.use('/api/credito', creditoRoutes);
 app.use('/api/admin', adminRoutes);
 
+// Ruta de prueba
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date() });
 });
