@@ -28,13 +28,16 @@ export default function Simulador() {
   const [cuotaEditada, setCuotaEditada] = useState('');
   const cotizacionRef = useRef(null);
 
-  // Calcular fecha sugerida para primera cuota (10 del mes siguiente al siguiente)
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
   const calcularFechaSugerida = (fechaInicio) => {
     const fecha = new Date(fechaInicio);
     return new Date(fecha.getFullYear(), fecha.getMonth() + 2, 10);
   };
 
-  // Cuando cambia la fecha de inicio, actualizar la fecha sugerida de primera cuota
   const handleFechaInicioChange = (e) => {
     const nuevaFecha = e.target.value;
     const fechaSugerida = calcularFechaSugerida(nuevaFecha);
@@ -50,13 +53,12 @@ export default function Simulador() {
     e.preventDefault();
     setCargando(true);
     try {
-      const fechaPrimerPago = form.fechaPrimerPago ? new Date(form.fechaPrimerPago) : null;
       const res = await axios.post(`${API_URL}/credito/simular`, {
         capital: parseFloat(form.capital),
         tasa: parseFloat(form.tasa),
         plazo: parseInt(form.plazo),
         fechaInicio: form.fechaInicio,
-        fechaPrimerPago: fechaPrimerPago
+        fechaPrimerPago: form.fechaPrimerPago || null
       });
       setResultado(res.data);
       setCuotaEditada(res.data.cuotaRedondeada.toString());
@@ -78,13 +80,12 @@ export default function Simulador() {
 
     setCargando(true);
     try {
-      const fechaPrimerPago = form.fechaPrimerPago ? new Date(form.fechaPrimerPago) : null;
       const res = await axios.post(`${API_URL}/credito/simular-con-cuota`, {
         capital: parseFloat(form.capital),
         tasa: parseFloat(form.tasa),
         plazo: parseInt(form.plazo),
         fechaInicio: form.fechaInicio,
-        fechaPrimerPago: fechaPrimerPago,
+        fechaPrimerPago: form.fechaPrimerPago || null,
         cuotaFija: parseFloat(cuotaEditada)
       });
       setResultado(res.data);
@@ -366,16 +367,29 @@ export default function Simulador() {
                   <table className="data-table">
                     <thead>
                       <tr>
-                        <th>N°</th><th>Fecha</th><th>Capital</th><th>Interés</th>
-                        <th>Seguro</th><th>Total Real</th><th>Ahorro</th><th>Cuota Fija</th><th>Saldo</th>
+                        <th>N°</th>
+                        <th>Fecha</th>
+                        <th>Capital</th>
+                        <th>Interés</th>
+                        <th>Seguro</th>
+                        <th>Total Real</th>
+                        <th>Ahorro</th>
+                        <th>Cuota Fija</th>
+                        <th>Saldo</th>
                       </tr>
                     </thead>
                     <tbody>
                       <tr className="row-inicial">
-                        <td>0</td><td>{formatDate(form.fechaInicio)}</td>
-                        <td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td>
-                        <td><strong>Bs {formatMoney(parseFloat(form.capital))}</strong></td>
-                       </tr>
+                        <td style={{ textAlign: 'center' }}>0</td>
+                        <td style={{ textAlign: 'center' }}>{formatDate(form.fechaInicio)}</td>
+                        <td style={{ textAlign: 'right' }}>-</td>
+                        <td style={{ textAlign: 'right' }}>-</td>
+                        <td style={{ textAlign: 'right' }}>-</td>
+                        <td style={{ textAlign: 'right' }}>-</td>
+                        <td style={{ textAlign: 'right' }}>-</td>
+                        <td style={{ textAlign: 'right' }}>-</td>
+                        <td style={{ textAlign: 'right' }}><strong>Bs {formatMoney(parseFloat(form.capital))}</strong></td>
+                      </tr>
                       {resultado.cuotas && resultado.cuotas.map((cuota, idx) => (
                         <tr key={idx}>
                           <td style={{ textAlign: 'center' }}>{cuota.cuota}</td>
