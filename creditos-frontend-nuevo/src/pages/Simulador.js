@@ -143,7 +143,7 @@ export default function Simulador() {
       doc.setFontSize(18);
       doc.text('SOCIETARIA CANTERA R.L.', 148.5, 20, { align: 'center' });
       doc.setFontSize(10);
-      doc.text('Cooperativa de Ahorro y Crédito Societaria', 148.5, 30, { align: 'center' });
+      doc.text('Cooperativa de Ahorro y Crédito', 148.5, 30, { align: 'center' });
       
       doc.setTextColor(0, 0, 0);
       doc.setFontSize(14);
@@ -172,6 +172,7 @@ export default function Simulador() {
         `Bs ${formatMoney(cuota.saldo)}`
       ]);
       
+      // Agregar fila de totales
       const totalCapital = resultado.cuotas.reduce((s, c) => s + (c.capital || 0), 0);
       const totalInteres = resultado.cuotas.reduce((s, c) => s + (c.interes || 0), 0);
       const totalSeguro = resultado.cuotas.reduce((s, c) => s + (c.cargos || 0), 0);
@@ -246,13 +247,13 @@ export default function Simulador() {
             <img src="/logo.png" alt="Societaria Cantera" className="logo-header" />
             <div className="coop-name">
               <h1>CANTERA R.L.</h1>
-              <p>Cooperativa de Ahorro y Crédito Societaria</p>
+              <p>Cooperativa de Ahorro y Crédito</p>
             </div>
           </div>
           <div className="user-info">
             <span className="user-name">Bienvenido {usuario?.nombre}</span>
             {usuario?.rol === 'admin' && (
-              <Link to="/admin" className="btn-admin">Panel De Control</Link>
+              <Link to="/admin" className="btn-admin">👑 Panel De Control</Link>
             )}
             <button onClick={handleLogout} className="btn-logout">Cerrar Sesión</button>
           </div>
@@ -263,24 +264,24 @@ export default function Simulador() {
         {!mostrarResultados ? (
           <div className="form-card">
             <div className="card-header">
-              <h2>SIMULADOR DE CRÉDITOS</h2>
+              <h2>📋 SIMULADOR DE CRÉDITOS</h2>
               <p>Complete los datos para obtener una cotización</p>
             </div>
             <form onSubmit={handleSimular}>
               <div className="card-body">
                 <div className="form-row">
                   <div className="form-group">
-                    <label>NOMBRE DEL SOCIO / INTERESADO *</label>
+                    <label>👤 NOMBRE DEL SOCIO / INTERESADO *</label>
                     <input
                       type="text"
                       required
-                      placeholder="Ej: Juan Pérez"
+                      placeholder="Ej: Juan Pérez Mamani"
                       value={form.nombreSocio}
                       onChange={(e) => setForm({...form, nombreSocio: e.target.value})}
                     />
                   </div>
                   <div className="form-group">
-                    <label>MONTO DEL CRÉDITO (BOB)</label>
+                    <label>💰 MONTO DEL CRÉDITO (BOB)</label>
                     <input
                       type="number"
                       required
@@ -292,7 +293,7 @@ export default function Simulador() {
                 </div>
                 <div className="form-row">
                   <div className="form-group">
-                    <label>FECHA DE DESEMBOLSO</label>
+                    <label>📅 FECHA DE DESEMBOLSO</label>
                     <input
                       type="date"
                       required
@@ -301,18 +302,18 @@ export default function Simulador() {
                     />
                   </div>
                   <div className="form-group">
-                    <label>FECHA PRIMER PAGO (Opcional)</label>
+                    <label>📅 FECHA PRIMER PAGO (Opcional)</label>
                     <input
                       type="date"
                       value={form.fechaPrimerPago}
                       onChange={(e) => setForm({...form, fechaPrimerPago: e.target.value})}
                     />
-                    <small>Dejar vacío para calcular automáticamente</small>
+                    <small>Dejar vacío para calcular automáticamente (10 del mes siguiente al siguiente)</small>
                   </div>
                 </div>
                 <div className="form-row">
                   <div className="form-group">
-                    <label>TASA DE INTERÉS (%)</label>
+                    <label>📈 TASA DE INTERÉS (%)</label>
                     <input
                       type="number"
                       step="0.01"
@@ -334,7 +335,7 @@ export default function Simulador() {
                   </div>
                 </div>
                 <button type="submit" disabled={cargando} className="btn-simular">
-                  {cargando ? 'CALCULANDO...' : 'SIMULAR CRÉDITO'}
+                  {cargando ? '🔄 CALCULANDO...' : '🔍 SIMULAR CRÉDITO'}
                 </button>
               </div>
             </form>
@@ -358,7 +359,7 @@ export default function Simulador() {
                           type="number"
                           value={cuotaEditada}
                           onChange={(e) => setCuotaEditada(e.target.value)}
-                          className="cuota-edit-input"
+                          style={{ width: '120px', padding: '5px', borderRadius: '5px', border: '1px solid #ccc' }}
                         />
                       ) : (
                         `Bs ${formatMoney(resultado.cuotaRedondeada)}`
@@ -367,12 +368,12 @@ export default function Simulador() {
                   </div>
                   <div className="info-item"><span className="info-label">Ahorro Total:</span><span className="info-value text-success">Bs {formatMoney(resultado.ahorroTotal)}</span></div>
                 </div>
-                <div className="btn-group">
+                <div style={{ display: 'flex', gap: '10px', marginTop: '15px', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
                   {!editandoCuota ? (
                     <button className="btn-nuevo" onClick={() => setEditandoCuota(true)}>✏️ EDITAR CUOTA</button>
                   ) : (
                     <>
-                      <button className="btn-guardar" onClick={recalcularConCuotaEditada}>GUARDAR CAMBIOS</button>
+                      <button className="btn-guardar" onClick={recalcularConCuotaEditada}>💾 GUARDAR CAMBIOS</button>
                       <button className="btn-cancelar" onClick={() => { setEditandoCuota(false); setCuotaEditada(resultado.cuotaRedondeada.toString()); }}>❌ CANCELAR</button>
                     </>
                   )}
@@ -381,14 +382,14 @@ export default function Simulador() {
             </div>
 
             <div className="card">
-              <div className="card-header card-header-flex">
+              <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
                 <h3>📊 TABLA DE AMORTIZACIÓN</h3>
-                <div className="btn-group">
+                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                   <button onClick={handleGuardarInteres} disabled={guardando} className="btn-guardar">
-                    {guardando ? 'GUARDANDO...' : 'REGISTRAR INTERÉS'}
+                    {guardando ? '💾 GUARDANDO...' : '📝 REGISTRAR INTERÉS'}
                   </button>
-                  <button onClick={handleNuevo} className="btn-nuevo">NUEVA SIMULACIÓN</button>
-                  <button onClick={generarPDF} className="btn-pdf">DESCARGAR PDF</button>
+                  <button onClick={handleNuevo} className="btn-nuevo">✨ NUEVA SIMULACIÓN</button>
+                  <button onClick={generarPDF} className="btn-pdf">📥 DESCARGAR PDF</button>
                 </div>
               </div>
               <div className="card-body">
@@ -402,38 +403,38 @@ export default function Simulador() {
                     </thead>
                     <tbody>
                       <tr className="row-inicial">
-                        <td data-label="N°" style={{ textAlign: 'center' }}>0</td>
-                        <td data-label="Fecha" style={{ textAlign: 'center' }}>{formatDate(form.fechaInicio)}</td>
-                        <td data-label="Capital" style={{ textAlign: 'right' }}>-</td>
-                        <td data-label="Interés" style={{ textAlign: 'right' }}>-</td>
-                        <td data-label="Seguro" style={{ textAlign: 'right' }}>-</td>
-                        <td data-label="Total Real" style={{ textAlign: 'right' }}>-</td>
-                        <td data-label="Ahorro" style={{ textAlign: 'right' }}>-</td>
-                        <td data-label="Cuota Fija" style={{ textAlign: 'right' }}>-</td>
-                        <td data-label="Saldo" style={{ textAlign: 'right' }}><strong>Bs {formatMoney(parseFloat(form.capital))}</strong></td>
+                        <td style={{ textAlign: 'center' }}>0</td>
+                        <td style={{ textAlign: 'center' }}>{formatDate(form.fechaInicio)}</td>
+                        <td style={{ textAlign: 'right' }}>-</td>
+                        <td style={{ textAlign: 'right' }}>-</td>
+                        <td style={{ textAlign: 'right' }}>-</td>
+                        <td style={{ textAlign: 'right' }}>-</td>
+                        <td style={{ textAlign: 'right' }}>-</td>
+                        <td style={{ textAlign: 'right' }}>-</td>
+                        <td style={{ textAlign: 'right' }}><strong>Bs {formatMoney(parseFloat(form.capital))}</strong></td>
                       </tr>
                       {resultado.cuotas && resultado.cuotas.map((cuota, idx) => (
                         <tr key={idx}>
-                          <td data-label="N°" style={{ textAlign: 'center' }}>{cuota.cuota}</td>
-                          <td data-label="Fecha" style={{ textAlign: 'center' }}>{formatDate(cuota.fecha)}</td>
-                          <td data-label="Capital" style={{ textAlign: 'right' }}>Bs {formatMoney(cuota.capital)}</td>
-                          <td data-label="Interés" style={{ textAlign: 'right' }}>Bs {formatMoney(cuota.interes)}</td>
-                          <td data-label="Seguro" style={{ textAlign: 'right' }}>Bs {formatMoney(cuota.cargos)}</td>
-                          <td data-label="Total Real" style={{ textAlign: 'right' }}>Bs {formatMoney(cuota.totalReal)}</td>
-                          <td data-label="Ahorro" style={{ textAlign: 'right', color: '#2E7D32', fontWeight: 'bold' }}>Bs {formatMoney(cuota.ahorro)}</td>
-                          <td data-label="Cuota Fija" style={{ textAlign: 'right', fontWeight: 'bold', color: '#1B5E20' }}>Bs {formatMoney(cuota.cuotaTotal)}</td>
-                          <td data-label="Saldo" style={{ textAlign: 'right' }}>Bs {formatMoney(cuota.saldo)}</td>
+                          <td style={{ textAlign: 'center' }}>{cuota.cuota}</td>
+                          <td style={{ textAlign: 'center' }}>{formatDate(cuota.fecha)}</td>
+                          <td style={{ textAlign: 'right' }}>Bs {formatMoney(cuota.capital)}</td>
+                          <td style={{ textAlign: 'right' }}>Bs {formatMoney(cuota.interes)}</td>
+                          <td style={{ textAlign: 'right' }}>Bs {formatMoney(cuota.cargos)}</td>
+                          <td style={{ textAlign: 'right' }}>Bs {formatMoney(cuota.totalReal)}</td>
+                          <td style={{ textAlign: 'right', color: '#2E7D32', fontWeight: 'bold' }}>Bs {formatMoney(cuota.ahorro)}</td>
+                          <td style={{ textAlign: 'right', fontWeight: 'bold', color: '#1B5E20' }}>Bs {formatMoney(cuota.cuotaTotal)}</td>
+                          <td style={{ textAlign: 'right' }}>Bs {formatMoney(cuota.saldo)}</td>
                         </tr>
                       ))}
                       <tr className="row-total">
-                        <td data-label="N°" colSpan="2"><strong>TOTALES</strong></td>
-                        <td data-label="Capital" style={{ textAlign: 'right' }}><strong>Bs {formatMoney(resultado.cuotas.reduce((s,c)=>s+(c.capital||0),0))}</strong></td>
-                        <td data-label="Interés" style={{ textAlign: 'right' }}><strong>Bs {formatMoney(resultado.cuotas.reduce((s,c)=>s+(c.interes||0),0))}</strong></td>
-                        <td data-label="Seguro" style={{ textAlign: 'right' }}><strong>Bs {formatMoney(resultado.cuotas.reduce((s,c)=>s+(c.cargos||0),0))}</strong></td>
-                        <td data-label="Total Real" style={{ textAlign: 'right' }}>-</td>
-                        <td data-label="Ahorro" style={{ textAlign: 'right', color: '#2E7D32' }}><strong>Bs {formatMoney(resultado.ahorroTotal)}</strong></td>
-                        <td data-label="Cuota Fija" style={{ textAlign: 'right' }}>-</td>
-                        <td data-label="Saldo" style={{ textAlign: 'right' }}>-</td>
+                        <td colSpan="2"><strong>TOTALES</strong></td>
+                        <td style={{ textAlign: 'right' }}><strong>Bs {formatMoney(resultado.cuotas.reduce((s,c)=>s+(c.capital||0),0))}</strong></td>
+                        <td style={{ textAlign: 'right' }}><strong>Bs {formatMoney(resultado.cuotas.reduce((s,c)=>s+(c.interes||0),0))}</strong></td>
+                        <td style={{ textAlign: 'right' }}><strong>Bs {formatMoney(resultado.cuotas.reduce((s,c)=>s+(c.cargos||0),0))}</strong></td>
+                        <td style={{ textAlign: 'right' }}>-</td>
+                        <td style={{ textAlign: 'right', color: '#2E7D32' }}><strong>Bs {formatMoney(resultado.ahorroTotal)}</strong></td>
+                        <td style={{ textAlign: 'right' }}>-</td>
+                        <td style={{ textAlign: 'right' }}>-</td>
                       </tr>
                     </tbody>
                   </table>

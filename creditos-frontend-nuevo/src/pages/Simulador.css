@@ -15,13 +15,12 @@
 body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   background: #f5f5f5;
-  font-size: clamp(14px, 2vw, 16px);
 }
 
 /* HEADER RESPONSIVE */
 .coop-header {
   background: var(--coop-green);
-  padding: clamp(0.75rem, 3vw, 1rem) clamp(1rem, 4vw, 2rem);
+  padding: 1rem 2rem;
   box-shadow: 0 2px 10px rgba(0,0,0,0.1);
   position: sticky;
   top: 0;
@@ -35,19 +34,19 @@ body {
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
-  gap: clamp(0.5rem, 2vw, 1rem);
+  gap: 1rem;
 }
 
 .logo-area {
   display: flex;
   align-items: center;
-  gap: clamp(0.5rem, 2vw, 1rem);
+  gap: 1rem;
   flex-wrap: wrap;
 }
 
 .logo-header {
-  width: clamp(35px, 8vw, 45px);
-  height: clamp(35px, 8vw, 45px);
+  width: 45px;
+  height: 45px;
   object-fit: contain;
   border-radius: 10px;
   background: white;
@@ -56,41 +55,64 @@ body {
 
 .coop-name h1 {
   color: white;
-  font-size: clamp(1rem, 4vw, 1.2rem);
+  font-size: 1.2rem;
 }
 
 .coop-name p {
   color: rgba(255,255,255,0.8);
-  font-size: clamp(0.6rem, 2vw, 0.7rem);
+  font-size: 0.7rem;
 }
 
 .user-info {
   display: flex;
   align-items: center;
-  gap: clamp(0.5rem, 2vw, 1rem);
+  gap: 1rem;
   flex-wrap: wrap;
 }
 
 .user-name {
   color: white;
-  font-size: clamp(0.75rem, 2vw, 0.9rem);
+  font-size: 0.9rem;
 }
 
-.btn-logout, .btn-admin {
-  padding: clamp(0.4rem, 1.5vw, 0.5rem) clamp(0.8rem, 2vw, 1rem);
+.btn-logout {
+  background: rgba(255,255,255,0.2);
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
   border-radius: 8px;
-  font-size: clamp(0.7rem, 2vw, 0.8rem);
+  cursor: pointer;
+  font-size: 0.8rem;
   white-space: nowrap;
 }
 
-/* CONTENEDOR PRINCIPAL */
-.main-container {
-  max-width: 1400px;
-  margin: clamp(1rem, 4vw, 2rem) auto;
-  padding: 0 clamp(0.75rem, 3vw, 2rem);
+.btn-logout:hover {
+  background: rgba(255,255,255,0.3);
 }
 
-/* TARJETAS RESPONSIVE */
+.btn-admin {
+  background: var(--coop-gold);
+  color: var(--coop-green);
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  text-decoration: none;
+  font-size: 0.8rem;
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+.btn-admin:hover {
+  background: var(--coop-gold-dark);
+  color: white;
+}
+
+.main-container {
+  max-width: 1400px;
+  margin: 2rem auto;
+  padding: 0 2rem;
+}
+
+/* TARJETAS */
 .form-card, .card {
   background: white;
   border-radius: 16px;
@@ -101,29 +123,31 @@ body {
 
 .card-header {
   background: #f9f9f9;
-  padding: clamp(0.75rem, 3vw, 1rem) clamp(1rem, 4vw, 1.5rem);
+  padding: 1rem 1.5rem;
   border-bottom: 1px solid var(--coop-border);
 }
 
 .card-header h2, .card-header h3 {
   color: var(--coop-green);
-  font-size: clamp(1rem, 4vw, 1.1rem);
+  font-size: 1.1rem;
 }
 
 .card-header p {
-  font-size: clamp(0.7rem, 2vw, 0.85rem);
+  font-size: 0.85rem;
+  color: #666;
+  margin-top: 0.25rem;
 }
 
 .card-body {
-  padding: clamp(1rem, 4vw, 1.5rem);
+  padding: 1.5rem;
 }
 
-/* FORMULARIOS RESPONSIVE */
+/* FORMULARIO RESPONSIVE */
 .form-row {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: clamp(1rem, 3vw, 1.5rem);
-  margin-bottom: clamp(1rem, 3vw, 1.5rem);
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
 }
 
 .form-group {
@@ -132,158 +156,288 @@ body {
 }
 
 .form-group label {
-  font-size: clamp(0.7rem, 2vw, 0.75rem);
+  font-size: 0.75rem;
+  color: #666;
   margin-bottom: 0.25rem;
+  font-weight: 600;
 }
 
 .form-group input {
-  padding: clamp(0.6rem, 2vw, 0.75rem);
-  font-size: clamp(0.85rem, 2.5vw, 1rem);
+  padding: 0.75rem;
+  border: 1px solid var(--coop-border);
+  border-radius: 8px;
+  font-size: 1rem;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: var(--coop-gold);
 }
 
 .form-group small {
-  font-size: clamp(0.6rem, 2vw, 0.7rem);
+  font-size: 0.7rem;
+  color: #888;
+  margin-top: 0.25rem;
 }
 
 .btn-simular {
-  padding: clamp(0.6rem, 2vw, 0.75rem);
-  font-size: clamp(0.85rem, 2.5vw, 1rem);
+  width: 100%;
+  background: var(--coop-gold);
+  color: var(--coop-green);
+  border: none;
+  padding: 0.75rem;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.btn-simular:hover {
+  background: var(--coop-gold-dark);
+  color: white;
 }
 
 /* GRID DE RESUMEN RESPONSIVE */
 .summary-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: clamp(0.5rem, 2vw, 1rem);
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
   margin-bottom: 1rem;
 }
 
 .info-item {
   display: flex;
   justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 0.5rem;
+  align-items: center;
   padding: 0.5rem 0;
   border-bottom: 1px dashed var(--coop-border);
+  flex-wrap: wrap;
+  gap: 0.5rem;
 }
 
 .info-label {
-  font-size: clamp(0.7rem, 2vw, 0.8rem);
+  font-size: 0.8rem;
+  color: #666;
 }
 
 .info-value {
-  font-size: clamp(0.8rem, 2.5vw, 0.9rem);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--coop-green);
   word-break: break-word;
   text-align: right;
 }
 
-/* BOTONES RESPONSIVE */
-.btn-group {
-  display: flex;
-  gap: clamp(0.5rem, 2vw, 1rem);
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  margin-top: 1rem;
+.text-success {
+  color: var(--coop-gold-dark);
 }
 
-.btn-guardar, .btn-nuevo, .btn-pdf, .btn-cancelar, .btn-imprimir {
-  padding: clamp(0.4rem, 1.5vw, 0.5rem) clamp(0.8rem, 2vw, 1rem);
-  font-size: clamp(0.7rem, 2vw, 0.85rem);
+/* BOTONES */
+.btn-guardar {
+  background: var(--coop-gold);
+  color: var(--coop-green);
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 0.8rem;
   white-space: nowrap;
 }
 
-/* TABLA RESPONSIVE */
+.btn-nuevo {
+  background: var(--coop-green);
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.btn-imprimir {
+  background: #666;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.btn-pdf {
+  background: #D4AF37;
+  color: #1B5E20;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.btn-pdf:hover {
+  background: #b8941e;
+  color: white;
+}
+
+.btn-cancelar {
+  background: #dc2626;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.btn-cancelar:hover {
+  background: #b91c1c;
+}
+
+/* TABLA RESPONSIVE - CLAVE PARA QUE SE VEA IGUAL EN MÓVIL */
 .table-container {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+  margin: 0 -0.5rem;
+  padding: 0 0.5rem;
 }
 
 .data-table {
+  min-width: 1000px;
   width: 100%;
-  min-width: 800px;
   border-collapse: collapse;
-  font-size: clamp(0.7rem, 2vw, 0.75rem);
+  font-size: 0.75rem;
 }
 
-.data-table th,
+.data-table th {
+  background: var(--coop-green);
+  color: white;
+  padding: 0.75rem;
+  text-align: center;
+  font-weight: bold;
+}
+
 .data-table td {
-  padding: clamp(0.5rem, 1.5vw, 0.75rem);
+  padding: 0.5rem;
   text-align: right;
   border-bottom: 1px solid var(--coop-border);
 }
 
-.data-table th:first-child,
-.data-table td:first-child {
+.data-table td:first-child,
+.data-table th:first-child {
   text-align: center;
 }
 
-/* Estilos para móviles - conversión de tabla a bloques */
-@media (max-width: 768px) {
-  .data-table,
-  .data-table thead,
-  .data-table tbody,
+.data-table tr:hover {
+  background: #f9f9f9;
+}
+
+.row-inicial {
+  background: #e8f5e9;
+}
+
+.row-total {
+  background: #fff8e1;
+  font-weight: bold;
+}
+
+.ahorro-cell {
+  color: var(--coop-green);
+  font-weight: bold;
+}
+
+.cuota-cell {
+  color: var(--coop-green);
+}
+
+.footer {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  text-align: center;
+  border-top: 1px solid var(--coop-border);
+  font-size: 0.7rem;
+  color: #666;
+}
+
+/* ============================================ */
+/* MEDIA QUERIES PARA PANTALLAS MÁS PEQUEÑAS */
+/* ============================================ */
+
+/* Tablets y móviles grandes (768px - 1024px) */
+@media (max-width: 1024px) {
+  .main-container {
+    padding: 0 1.5rem;
+    margin: 1.5rem auto;
+  }
+  
+  .data-table {
+    min-width: 900px;
+    font-size: 0.7rem;
+  }
+  
   .data-table th,
-  .data-table td,
-  .data-table tr {
-    display: block;
-  }
-  
-  .data-table thead tr {
-    display: none;
-  }
-  
-  .data-table tr {
-    margin-bottom: 1rem;
-    border: 1px solid var(--coop-border);
-    border-radius: 8px;
-    padding: 0.5rem;
-  }
-  
   .data-table td {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    text-align: right !important;
-    padding: 0.5rem;
-    border: none;
-    border-bottom: 1px solid #eee;
-  }
-  
-  .data-table td:last-child {
-    border-bottom: none;
-  }
-  
-  .data-table td::before {
-    content: attr(data-label);
-    font-weight: bold;
-    color: var(--coop-green);
-    text-align: left;
-    flex: 1;
-  }
-  
-  .row-inicial td::before,
-  .row-total td::before {
-    font-weight: bold;
-  }
-  
-  .btn-group {
-    justify-content: center;
-  }
-  
-  .btn-guardar, .btn-nuevo, .btn-pdf, .btn-cancelar {
-    white-space: normal;
-    flex: 1 1 auto;
-    min-width: 120px;
-  }
-  
-  .card-header-flex {
-    flex-direction: column;
-    align-items: flex-start !important;
+    padding: 0.5rem 0.4rem;
   }
 }
 
-/* Ajustes para pantallas muy pequeñas */
-@media (max-width: 480px) {
+/* Móviles (menos de 768px) */
+@media (max-width: 768px) {
+  .coop-header {
+    padding: 0.8rem 1rem;
+  }
+  
+  .main-container {
+    padding: 0 1rem;
+    margin: 1rem auto;
+  }
+  
+  .card-header {
+    padding: 0.8rem 1rem;
+  }
+  
+  .card-header h2, .card-header h3 {
+    font-size: 1rem;
+  }
+  
+  .card-body {
+    padding: 1rem;
+  }
+  
+  .form-row {
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+  
+  .summary-grid {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+  
+  .info-item {
+    flex-direction: row;
+    justify-content: space-between;
+  }
+  
+  /* Botones se adaptan pero no se cortan */
+  .btn-guardar, .btn-nuevo, .btn-pdf, .btn-cancelar, .btn-imprimir {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.75rem;
+    white-space: nowrap;
+  }
+  
+  /* Contenedor de botones responsive */
+  div[style*="display: flex"] {
+    justify-content: center !important;
+  }
+  
+  /* Header se apila en móvil muy pequeño */
   .header-container {
     flex-direction: column;
     text-align: center;
@@ -297,53 +451,128 @@ body {
     justify-content: center;
   }
   
-  .summary-grid {
-    grid-template-columns: 1fr;
+  /* Tabla: mantener scroll horizontal, todo visible */
+  .table-container {
+    margin: 0 -0.75rem;
+    padding: 0 0.75rem;
   }
   
-  .info-item {
-    flex-direction: column;
-    align-items: flex-start;
+  .data-table {
+    min-width: 850px;
+    font-size: 0.65rem;
   }
   
-  .info-value {
-    text-align: left;
-  }
-  
-  .btn-group {
-    flex-direction: column;
-  }
-  
-  .btn-guardar, .btn-nuevo, .btn-pdf, .btn-cancelar {
-    width: 100%;
-    text-align: center;
+  .data-table th,
+  .data-table td {
+    padding: 0.4rem 0.3rem;
   }
 }
 
-/* Estilos para impresión */
+/* Móviles muy pequeños (menos de 480px) */
+@media (max-width: 480px) {
+  .coop-header {
+    padding: 0.6rem 0.8rem;
+  }
+  
+  .logo-header {
+    width: 35px;
+    height: 35px;
+  }
+  
+  .coop-name h1 {
+    font-size: 1rem;
+  }
+  
+  .coop-name p {
+    font-size: 0.6rem;
+  }
+  
+  .user-name {
+    font-size: 0.75rem;
+  }
+  
+  .btn-logout, .btn-admin {
+    padding: 0.35rem 0.7rem;
+    font-size: 0.7rem;
+  }
+  
+  .main-container {
+    padding: 0 0.8rem;
+    margin: 0.8rem auto;
+  }
+  
+  .card-header {
+    padding: 0.7rem 0.8rem;
+  }
+  
+  .card-header h2, .card-header h3 {
+    font-size: 0.9rem;
+  }
+  
+  .card-header p {
+    font-size: 0.7rem;
+  }
+  
+  .card-body {
+    padding: 0.8rem;
+  }
+  
+  .form-group input {
+    padding: 0.6rem;
+    font-size: 0.9rem;
+  }
+  
+  .form-group label {
+    font-size: 0.7rem;
+  }
+  
+  .form-group small {
+    font-size: 0.6rem;
+  }
+  
+  .btn-simular {
+    padding: 0.6rem;
+    font-size: 0.9rem;
+  }
+  
+  .info-label {
+    font-size: 0.7rem;
+  }
+  
+  .info-value {
+    font-size: 0.8rem;
+  }
+  
+  /* Botones más compactos pero legibles */
+  .btn-guardar, .btn-nuevo, .btn-pdf, .btn-cancelar {
+    padding: 0.35rem 0.6rem;
+    font-size: 0.7rem;
+  }
+  
+  /* Tabla aún más compacta */
+  .data-table {
+    min-width: 750px;
+    font-size: 0.6rem;
+  }
+  
+  .data-table th,
+  .data-table td {
+    padding: 0.3rem 0.2rem;
+  }
+}
+
+/* IMPRESIÓN */
 @media print {
-  .coop-header, .btn-guardar, .btn-nuevo, .btn-imprimir, .user-info, .btn-group {
+  .coop-header, .btn-guardar, .btn-nuevo, .btn-imprimir, .user-info, .btn-pdf, .btn-cancelar {
     display: none;
+  }
+  
+  .main-container {
+    margin: 0;
+    padding: 0;
   }
   
   .data-table {
     font-size: 10pt;
   }
-}
-
-/* Input de edición de cuota responsivo */
-.cuota-edit-input {
-  width: min(120px, 40vw);
-  padding: 5px;
-  border-radius: 5px;
-  border: 1px solid #ccc;
-  font-size: clamp(0.8rem, 2.5vw, 1rem);
-}
-
-.card-header-flex {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 1rem;
 }
