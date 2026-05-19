@@ -141,9 +141,9 @@ export default function Simulador() {
       doc.rect(0, 0, 297, 35, 'F');
       doc.setTextColor(255, 255, 255);
       doc.setFontSize(18);
-      doc.text('SOCIETARIA CANTERA R.L.', 148.5, 20, { align: 'center' });
+      doc.text('CANTERA R.L.', 148.5, 20, { align: 'center' });
       doc.setFontSize(10);
-      doc.text('Cooperativa de Ahorro y Crédito', 148.5, 30, { align: 'center' });
+      doc.text('Cooperativa de Ahorro y Crédito Societaria', 148.5, 30, { align: 'center' });
       
       doc.setTextColor(0, 0, 0);
       doc.setFontSize(14);
@@ -215,7 +215,7 @@ export default function Simulador() {
       doc.setFontSize(8);
       doc.setTextColor(100, 100, 100);
       doc.text('Esta cotización es una simulación. La tasa está sujeta a evaluación crediticia.', 148.5, finalY, { align: 'center' });
-      doc.text('Societaria Cantera R.L. - "Ahorrando juntos, crecemos más"', 148.5, finalY + 7, { align: 'center' });
+      doc.text('Cooperativa de Ahorro y Credito Cantera R.L.', 148.5, finalY + 7, { align: 'center' });
       
       doc.save(`cotizacion_${form.nombreSocio.replace(/\s/g, '_')}.pdf`);
       toast.success('PDF descargado');
