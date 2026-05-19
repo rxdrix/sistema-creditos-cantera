@@ -33,7 +33,6 @@ export default function Simulador() {
     navigate('/login');
   };
 
-  
   const calcularFechaSugerida = (fechaInicio) => {
     const fecha = new Date(fechaInicio);
     return new Date(fecha.getFullYear(), fecha.getMonth() + 2, 10);
@@ -142,9 +141,9 @@ export default function Simulador() {
       doc.rect(0, 0, 297, 35, 'F');
       doc.setTextColor(255, 255, 255);
       doc.setFontSize(18);
-      doc.text('CANTERA R.L.', 148.5, 20, { align: 'center' });
+      doc.text('SOCIETARIA CANTERA R.L.', 148.5, 20, { align: 'center' });
       doc.setFontSize(10);
-      doc.text('Cooperativa de Ahorro y Crédito Societaria', 148.5, 30, { align: 'center' });
+      doc.text('Cooperativa de Ahorro y Crédito', 148.5, 30, { align: 'center' });
       
       doc.setTextColor(0, 0, 0);
       doc.setFontSize(14);
@@ -173,20 +172,50 @@ export default function Simulador() {
         `Bs ${formatMoney(cuota.saldo)}`
       ]);
       
+      // Agregar fila de totales
+      const totalCapital = resultado.cuotas.reduce((s, c) => s + (c.capital || 0), 0);
+      const totalInteres = resultado.cuotas.reduce((s, c) => s + (c.interes || 0), 0);
+      const totalSeguro = resultado.cuotas.reduce((s, c) => s + (c.cargos || 0), 0);
+      
+      tableRows.push([
+        'TOTALES',
+        '',
+        `Bs ${formatMoney(totalCapital)}`,
+        `Bs ${formatMoney(totalInteres)}`,
+        `Bs ${formatMoney(totalSeguro)}`,
+        '',
+        `Bs ${formatMoney(resultado.ahorroTotal)}`,
+        '',
+        ''
+      ]);
+      
       doc.autoTable({
         startY: 115,
         head: [tableColumn],
         body: tableRows,
         theme: 'striped',
-        headStyles: { fillColor: [27, 94, 32], textColor: 255 },
-        bodyStyles: { fontSize: 7, cellPadding: 2 }
+        headStyles: { 
+          fillColor: [27, 94, 32], 
+          textColor: 255,
+          fontSize: 9,
+          fontStyle: 'bold'
+        },
+        bodyStyles: { 
+          fontSize: 8, 
+          cellPadding: 2 
+        },
+        footStyles: {
+          fillColor: [245, 245, 245],
+          textColor: 0,
+          fontStyle: 'bold'
+        }
       });
       
       const finalY = doc.lastAutoTable.finalY + 10;
       doc.setFontSize(8);
       doc.setTextColor(100, 100, 100);
       doc.text('Esta cotización es una simulación. La tasa está sujeta a evaluación crediticia.', 148.5, finalY, { align: 'center' });
-      doc.text('Cooperativa Cantera R.L."', 148.5, finalY + 7, { align: 'center' });
+      doc.text('Societaria Cantera R.L. - "Ahorrando juntos, crecemos más"', 148.5, finalY + 7, { align: 'center' });
       
       doc.save(`cotizacion_${form.nombreSocio.replace(/\s/g, '_')}.pdf`);
       toast.success('PDF descargado');
@@ -218,13 +247,13 @@ export default function Simulador() {
             <img src="/logo.png" alt="Societaria Cantera" className="logo-header" />
             <div className="coop-name">
               <h1>CANTERA R.L.</h1>
-              <p>Cooperativa de Ahorro y Crédito Societaria</p>
+              <p>Cooperativa de Ahorro y Crédito</p>
             </div>
           </div>
           <div className="user-info">
-            <span className="user-name">Bienvenid@ {usuario?.nombre}</span>
+            <span className="user-name">Bienvenido {usuario?.nombre}</span>
             {usuario?.rol === 'admin' && (
-              <Link to="/admin" className="btn-admin">Panel De Control</Link>
+              <Link to="/admin" className="btn-admin">👑 Panel De Control</Link>
             )}
             <button onClick={handleLogout} className="btn-logout">Cerrar Sesión</button>
           </div>
@@ -235,14 +264,14 @@ export default function Simulador() {
         {!mostrarResultados ? (
           <div className="form-card">
             <div className="card-header">
-              <h2>SIMULADOR DE CRÉDITOS</h2>
+              <h2>📋 SIMULADOR DE CRÉDITOS</h2>
               <p>Complete los datos para obtener una cotización</p>
             </div>
             <form onSubmit={handleSimular}>
               <div className="card-body">
                 <div className="form-row">
                   <div className="form-group">
-                    <label>NOMBRE DEL SOCIO / INTERESADO</label>
+                    <label>👤 NOMBRE DEL SOCIO / INTERESADO *</label>
                     <input
                       type="text"
                       required
@@ -252,7 +281,7 @@ export default function Simulador() {
                     />
                   </div>
                   <div className="form-group">
-                    <label>MONTO DEL CRÉDITO (BOB)</label>
+                    <label>💰 MONTO DEL CRÉDITO (BOB)</label>
                     <input
                       type="number"
                       required
@@ -264,7 +293,7 @@ export default function Simulador() {
                 </div>
                 <div className="form-row">
                   <div className="form-group">
-                    <label>FECHA DE DESEMBOLSO</label>
+                    <label>📅 FECHA DE DESEMBOLSO</label>
                     <input
                       type="date"
                       required
@@ -273,13 +302,13 @@ export default function Simulador() {
                     />
                   </div>
                   <div className="form-group">
-                    <label>FECHA PRIMER PAGO (Manual)</label>
+                    <label>📅 FECHA PRIMER PAGO (Opcional)</label>
                     <input
                       type="date"
                       value={form.fechaPrimerPago}
                       onChange={(e) => setForm({...form, fechaPrimerPago: e.target.value})}
                     />
-                    <small>Dejar vacío para calcular automáticamente</small>
+                    <small>Dejar vacío para calcular automáticamente (10 del mes siguiente al siguiente)</small>
                   </div>
                 </div>
                 <div className="form-row">
@@ -306,7 +335,7 @@ export default function Simulador() {
                   </div>
                 </div>
                 <button type="submit" disabled={cargando} className="btn-simular">
-                  {cargando ? '🔄 CALCULANDO...' : 'SIMULAR CRÉDITO'}
+                  {cargando ? '🔄 CALCULANDO...' : '🔍 SIMULAR CRÉDITO'}
                 </button>
               </div>
             </form>
@@ -315,7 +344,7 @@ export default function Simulador() {
           <div ref={cotizacionRef}>
             <div className="card">
               <div className="card-header">
-                <h3>DATOS DEL CRÉDITO</h3>
+                <h3>📋 DATOS DEL CRÉDITO</h3>
               </div>
               <div className="card-body">
                 <div className="summary-grid">
@@ -339,12 +368,12 @@ export default function Simulador() {
                   </div>
                   <div className="info-item"><span className="info-label">Ahorro Total:</span><span className="info-value text-success">Bs {formatMoney(resultado.ahorroTotal)}</span></div>
                 </div>
-                <div style={{ display: 'flex', gap: '10px', marginTop: '15px', justifyContent: 'flex-end' }}>
+                <div style={{ display: 'flex', gap: '10px', marginTop: '15px', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
                   {!editandoCuota ? (
-                    <button className="btn-nuevo" onClick={() => setEditandoCuota(true)}>EDITAR CUOTA</button>
+                    <button className="btn-nuevo" onClick={() => setEditandoCuota(true)}>✏️ EDITAR CUOTA</button>
                   ) : (
                     <>
-                      <button className="btn-guardar" onClick={recalcularConCuotaEditada}>GUARDAR CAMBIOS</button>
+                      <button className="btn-guardar" onClick={recalcularConCuotaEditada}>💾 GUARDAR CAMBIOS</button>
                       <button className="btn-cancelar" onClick={() => { setEditandoCuota(false); setCuotaEditada(resultado.cuotaRedondeada.toString()); }}>❌ CANCELAR</button>
                     </>
                   )}
@@ -355,12 +384,12 @@ export default function Simulador() {
             <div className="card">
               <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
                 <h3>📊 TABLA DE AMORTIZACIÓN</h3>
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                   <button onClick={handleGuardarInteres} disabled={guardando} className="btn-guardar">
-                    {guardando ? 'GUARDANDO...' : 'REGISTRAR INTERÉS'}
+                    {guardando ? '💾 GUARDANDO...' : '📝 REGISTRAR INTERÉS'}
                   </button>
                   <button onClick={handleNuevo} className="btn-nuevo">✨ NUEVA SIMULACIÓN</button>
-                  <button onClick={generarPDF} className="btn-pdf">DESCARGAR PDF</button>
+                  <button onClick={generarPDF} className="btn-pdf">📥 DESCARGAR PDF</button>
                 </div>
               </div>
               <div className="card-body">
@@ -368,15 +397,8 @@ export default function Simulador() {
                   <table className="data-table">
                     <thead>
                       <tr>
-                        <th>N°</th>
-                        <th>Fecha</th>
-                        <th>Capital</th>
-                        <th>Interés</th>
-                        <th>Seguro</th>
-                        <th>Total Real</th>
-                        <th>Ahorro</th>
-                        <th>Cuota Fija</th>
-                        <th>Saldo</th>
+                        <th>N°</th><th>Fecha</th><th>Capital</th><th>Interés</th>
+                        <th>Seguro</th><th>Total Real</th><th>Ahorro</th><th>Cuota Fija</th><th>Saldo</th>
                       </tr>
                     </thead>
                     <tbody>
