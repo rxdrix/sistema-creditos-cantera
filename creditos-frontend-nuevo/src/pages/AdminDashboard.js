@@ -188,7 +188,7 @@ function AdminDashboard() {
       doc.rect(0, 0, 297, 30, 'F');
       doc.setTextColor(255, 255, 255);
       doc.setFontSize(16);
-      doc.text('COOPERATIVA CANTERA R.L.', 148.5, 20, { align: 'center' });
+      doc.text('SOCIETARIA CANTERA R.L.', 148.5, 20, { align: 'center' });
       
       doc.setTextColor(0, 0, 0);
       doc.setFontSize(12);
@@ -369,12 +369,12 @@ function AdminDashboard() {
         <div className="logo-area">
           <img src="/icon.png" alt="Societaria Cantera" className="logo-icon" />
           <div>
-            <h1>Cooperativa Cantera R.L.</h1>
+            <h1>Societaria Cantera R.L.</h1>
             <p>Panel de Administración</p>
           </div>
         </div>
         <div className="user-info">
-          <span>Administrador: {usuario?.nombre}</span>
+          <span>👑 Admin: {usuario?.nombre}</span>
           <button onClick={handleLogout} className="btn-logout">Cerrar Sesión</button>
         </div>
       </header>
@@ -395,7 +395,7 @@ function AdminDashboard() {
         {activeTab === 'usuarios' && (
           <div className="card">
             <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h3>Usuarios Registrados</h3>
+              <h3>👥 Usuarios Registrados</h3>
               <button className="btn-primary" onClick={() => setShowModal(true)}>➕ Nuevo Usuario</button>
             </div>
             <div className="table-responsive">
@@ -414,11 +414,11 @@ function AdminDashboard() {
                       <td>{user.telefono || '-'}</td>
                       <td>
                         {user.id === usuario?.id ? (
-                          <span className="badge-admin">Administrador</span>
+                          <span className="badge-admin">👑 Administrador</span>
                         ) : (
                           <select value={user.rol} onChange={(e) => actualizarRol(user.id, e.target.value)} className="rol-select">
-                            <option value="usuario">Usuario</option>
-                            <option value="admin">Administrador</option>
+                            <option value="usuario">👤 Usuario</option>
+                            <option value="admin">👑 Administrador</option>
                           </select>
                         )}
                       </td>
@@ -427,14 +427,14 @@ function AdminDashboard() {
                           className={`btn-${user.activo ? 'disable' : 'enable'}`}
                           onClick={() => toggleActivoUsuario(user.id, user.activo, user.nombre)}
                         >
-                          {user.activo ? 'Desactivar' : 'Activar'}
+                          {user.activo ? '🔴 Desactivar' : '🟢 Activar'}
                         </button>
                       </td>
                       <td>
                         <button className="btn-edit" onClick={() => {
                           setUsuarioEditando(user);
                           setShowEditModal(true);
-                        }}>Editar</button>
+                        }}>✏️ Editar</button>
                       </td>
                     </tr>
                   ))}
@@ -447,7 +447,7 @@ function AdminDashboard() {
         {activeTab === 'solicitudes' && (
           <div className="card">
             <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
-              <h3>Registro de Créditos</h3>
+              <h3>📞 Solicitudes de Crédito</h3>
               <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                 <input type="date" value={fechaInicio} onChange={(e) => setFechaInicio(e.target.value)} className="date-input" />
                 <input type="date" value={fechaFin} onChange={(e) => setFechaFin(e.target.value)} className="date-input" />
@@ -535,8 +535,8 @@ function AdminDashboard() {
               <input type="tel" placeholder="Teléfono" value={nuevoUsuario.telefono} onChange={(e) => setNuevoUsuario({...nuevoUsuario, telefono: e.target.value})} />
               <input type="password" placeholder="Contraseña" required value={nuevoUsuario.password} onChange={(e) => setNuevoUsuario({...nuevoUsuario, password: e.target.value})} />
               <select value={nuevoUsuario.rol} onChange={(e) => setNuevoUsuario({...nuevoUsuario, rol: e.target.value})}>
-                <option value="usuario">Usuario</option>
-                <option value="admin">Administrador</option>
+                <option value="usuario">👤 Usuario</option>
+                <option value="admin">👑 Administrador</option>
               </select>
               <div className="modal-buttons">
                 <button type="button" className="btn-cancel" onClick={() => { setShowModal(false); setNuevoUsuario({ nombre: '', email: '', telefono: '', password: '', rol: 'usuario' }); }}>Cancelar</button>
@@ -551,14 +551,14 @@ function AdminDashboard() {
       {showEditModal && usuarioEditando && (
         <div className="modal-overlay" onClick={() => { setShowEditModal(false); setUsuarioEditando(null); }}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <h3>Editar Usuario</h3>
+            <h3>✏️ Editar Usuario</h3>
             <form onSubmit={editarUsuario}>
               <input type="text" placeholder="Nombre" required value={usuarioEditando.nombre} onChange={(e) => setUsuarioEditando({...usuarioEditando, nombre: e.target.value})} />
               <input type="email" placeholder="Email" required value={usuarioEditando.email} onChange={(e) => setUsuarioEditando({...usuarioEditando, email: e.target.value})} />
               <input type="tel" placeholder="Teléfono" value={usuarioEditando.telefono || ''} onChange={(e) => setUsuarioEditando({...usuarioEditando, telefono: e.target.value})} />
               <select value={usuarioEditando.rol} onChange={(e) => setUsuarioEditando({...usuarioEditando, rol: e.target.value})}>
-                <option value="usuario">Usuario</option>
-                <option value="admin">Administrador</option>
+                <option value="usuario">👤 Usuario</option>
+                <option value="admin">👑 Administrador</option>
               </select>
               <div className="modal-buttons">
                 <button type="button" className="btn-cancel" onClick={() => { setShowEditModal(false); setUsuarioEditando(null); }}>Cancelar</button>
