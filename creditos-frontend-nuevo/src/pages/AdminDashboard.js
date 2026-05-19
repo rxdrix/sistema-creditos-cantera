@@ -188,7 +188,7 @@ function AdminDashboard() {
       doc.rect(0, 0, 297, 30, 'F');
       doc.setTextColor(255, 255, 255);
       doc.setFontSize(16);
-      doc.text('SOCIETARIA CANTERA R.L.', 148.5, 20, { align: 'center' });
+      doc.text('CANTERA R.L.', 148.5, 20, { align: 'center' });
       
       doc.setTextColor(0, 0, 0);
       doc.setFontSize(12);
@@ -366,43 +366,64 @@ function AdminDashboard() {
   return (
     <div className="admin-container">
       <header className="admin-header">
-        <div className="logo-area">
+        <div className="logo-area" onClick={() => navigate('/simulador')} style={{ cursor: 'pointer' }}>
           <img src="/icon.png" alt="Societaria Cantera" className="logo-icon" />
           <div>
-            <h1>Societaria Cantera R.L.</h1>
+            <h1>Cantera R.L.</h1>
             <p>Panel de Administración</p>
           </div>
         </div>
         <div className="user-info">
-          <span>👑 Admin: {usuario?.nombre}</span>
+          <span>Administrador: {usuario?.nombre}</span>
           <button onClick={handleLogout} className="btn-logout">Cerrar Sesión</button>
         </div>
       </header>
 
       <div className="admin-main">
         <div className="stats-grid">
-          <div className="stat-card"><div className="number">{usuarios.length}</div><div className="label">Usuarios</div></div>
-          <div className="stat-card"><div className="number">{registrosInteres.length}</div><div className="label">Solicitudes</div></div>
-          <div className="stat-card"><div className="number">{simulaciones.length}</div><div className="label">Simulaciones</div></div>
+          <div className="stat-card">
+            <div className="number">{usuarios.length}</div>
+            <div className="label">Usuarios</div>
+          </div>
+          <div className="stat-card">
+            <div className="number">{registrosInteres.length}</div>
+            <div className="label">Solicitudes</div>
+          </div>
+          <div className="stat-card">
+            <div className="number">{simulaciones.length}</div>
+            <div className="label">Simulaciones</div>
+          </div>
         </div>
 
         <div className="admin-tabs">
-          <button className={`tab-btn ${activeTab === 'usuarios' ? 'active' : ''}`} onClick={() => setActiveTab('usuarios')}>👥 Usuarios ({usuarios.length})</button>
-          <button className={`tab-btn ${activeTab === 'solicitudes' ? 'active' : ''}`} onClick={() => setActiveTab('solicitudes')}>📞 Solicitudes ({registrosInteres.length})</button>
-          <button className={`tab-btn ${activeTab === 'simulaciones' ? 'active' : ''}`} onClick={() => setActiveTab('simulaciones')}>📊 Simulaciones ({simulaciones.length})</button>
+          <button className={`tab-btn ${activeTab === 'usuarios' ? 'active' : ''}`} onClick={() => setActiveTab('usuarios')}>
+            Usuarios ({usuarios.length})
+          </button>
+          <button className={`tab-btn ${activeTab === 'solicitudes' ? 'active' : ''}`} onClick={() => setActiveTab('solicitudes')}>
+            Solicitudes ({registrosInteres.length})
+          </button>
+          <button className={`tab-btn ${activeTab === 'simulaciones' ? 'active' : ''}`} onClick={() => setActiveTab('simulaciones')}>
+            Simulaciones ({simulaciones.length})
+          </button>
         </div>
 
         {activeTab === 'usuarios' && (
           <div className="card">
-            <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h3>👥 Usuarios Registrados</h3>
+            <div className="card-header">
+              <h3>Usuarios Registrados</h3>
               <button className="btn-primary" onClick={() => setShowModal(true)}>➕ Nuevo Usuario</button>
             </div>
             <div className="table-responsive">
               <table className="data-table">
                 <thead>
                   <tr>
-                    <th>ID</th><th>Nombre</th><th>Email</th><th>Teléfono</th><th>Rol</th><th>Estado</th><th>Acciones</th>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Email</th>
+                    <th>Teléfono</th>
+                    <th>Rol</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -414,27 +435,36 @@ function AdminDashboard() {
                       <td>{user.telefono || '-'}</td>
                       <td>
                         {user.id === usuario?.id ? (
-                          <span className="badge-admin">👑 Administrador</span>
+                          <span className="badge-admin">Administrador</span>
                         ) : (
-                          <select value={user.rol} onChange={(e) => actualizarRol(user.id, e.target.value)} className="rol-select">
-                            <option value="usuario">👤 Usuario</option>
-                            <option value="admin">👑 Administrador</option>
+                          <select 
+                            value={user.rol} 
+                            onChange={(e) => actualizarRol(user.id, e.target.value)} 
+                            className="rol-select"
+                          >
+                            <option value="usuario">Usuario</option>
+                            <option value="admin">Administrador</option>
                           </select>
                         )}
                       </td>
                       <td>
                         <button 
-                          className={`btn-${user.activo ? 'disable' : 'enable'}`}
+                          className={user.activo ? 'btn-disable' : 'btn-enable'}
                           onClick={() => toggleActivoUsuario(user.id, user.activo, user.nombre)}
                         >
-                          {user.activo ? '🔴 Desactivar' : '🟢 Activar'}
+                          {user.activo ? 'Desactivar' : 'Activar'}
                         </button>
                       </td>
                       <td>
-                        <button className="btn-edit" onClick={() => {
-                          setUsuarioEditando(user);
-                          setShowEditModal(true);
-                        }}>✏️ Editar</button>
+                        <button 
+                          className="btn-edit" 
+                          onClick={() => {
+                            setUsuarioEditando(user);
+                            setShowEditModal(true);
+                          }}
+                        >
+                          Editar
+                        </button>
                       </td>
                     </tr>
                   ))}
@@ -446,22 +476,50 @@ function AdminDashboard() {
 
         {activeTab === 'solicitudes' && (
           <div className="card">
-            <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
-              <h3>📞 Solicitudes de Crédito</h3>
+            <div className="card-header">
+              <h3>Solicitudes de Crédito</h3>
               <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                <input type="date" value={fechaInicio} onChange={(e) => setFechaInicio(e.target.value)} className="date-input" />
-                <input type="date" value={fechaFin} onChange={(e) => setFechaFin(e.target.value)} className="date-input" />
-                <input type="text" value={nombreBuscar} onChange={(e) => setNombreBuscar(e.target.value)} className="date-input" placeholder="Buscar por nombre" />
-                <button className="btn-search" onClick={buscarRegistros}>🔍 Buscar</button>
-                {filtroActivo && <button className="btn-clear" onClick={limpiarFiltro}>🗑️ Limpiar</button>}
-                <button className="btn-download" onClick={descargarReportePDF}>📥 Descargar PDF</button>
+                <input 
+                  type="date" 
+                  value={fechaInicio} 
+                  onChange={(e) => setFechaInicio(e.target.value)} 
+                  className="date-input" 
+                  placeholder="Fecha inicio"
+                />
+                <input 
+                  type="date" 
+                  value={fechaFin} 
+                  onChange={(e) => setFechaFin(e.target.value)} 
+                  className="date-input" 
+                  placeholder="Fecha fin"
+                />
+                <input 
+                  type="text" 
+                  value={nombreBuscar} 
+                  onChange={(e) => setNombreBuscar(e.target.value)} 
+                  className="date-input" 
+                  placeholder="Buscar por nombre" 
+                />
+                <button className="btn-search" onClick={buscarRegistros}>Buscar</button>
+                {filtroActivo && (
+                  <button className="btn-clear" onClick={limpiarFiltro}>Limpiar</button>
+                )}
+                <button className="btn-download" onClick={descargarReportePDF}>Descargar PDF</button>
               </div>
             </div>
             <div className="table-responsive">
               <table className="data-table">
                 <thead>
                   <tr>
-                    <th>ID</th><th>Nombre</th><th>Email</th><th>Teléfono</th><th>Monto</th><th>Plazo</th><th>Estado</th><th>Registrado por</th><th>Fecha</th>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Email</th>
+                    <th>Teléfono</th>
+                    <th>Monto</th>
+                    <th>Plazo</th>
+                    <th>Estado</th>
+                    <th>Registrado por</th>
+                    <th>Fecha</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -474,7 +532,11 @@ function AdminDashboard() {
                       <td>Bs {formatMoney(reg.monto_interes)}</td>
                       <td>{reg.plazo_interes || '-'} meses</td>
                       <td>
-                        <select value={reg.estado || 'pendiente'} onChange={(e) => actualizarEstadoRegistro(reg.id, e.target.value)} className={`estado-select ${reg.estado || 'pendiente'}`}>
+                        <select 
+                          value={reg.estado || 'pendiente'} 
+                          onChange={(e) => actualizarEstadoRegistro(reg.id, e.target.value)} 
+                          className={`estado-select ${reg.estado || 'pendiente'}`}
+                        >
                           <option value="pendiente">⏳ Pendiente</option>
                           <option value="contactado">📞 Contactado</option>
                           <option value="aprobado">✅ Aprobado</option>
@@ -493,15 +555,22 @@ function AdminDashboard() {
 
         {activeTab === 'simulaciones' && (
           <div className="card">
-            <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div className="card-header">
               <h3>📊 Historial de Simulaciones</h3>
-              <button className="btn-download" onClick={generarPDFSimulaciones}>📥 Descargar PDF</button>
+              <button className="btn-download" onClick={generarPDFSimulaciones}>Descargar PDF</button>
             </div>
             <div className="table-responsive">
               <table className="data-table">
                 <thead>
                   <tr>
-                    <th>ID</th><th>Usuario</th><th>Monto</th><th>Tasa</th><th>Plazo</th><th>Cuota Fija</th><th>Ahorro</th><th>Fecha</th>
+                    <th>ID</th>
+                    <th>Usuario</th>
+                    <th>Monto</th>
+                    <th>Tasa</th>
+                    <th>Plazo</th>
+                    <th>Cuota Fija</th>
+                    <th>Ahorro</th>
+                    <th>Fecha</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -530,16 +599,44 @@ function AdminDashboard() {
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <h3>➕ Nuevo Usuario</h3>
             <form onSubmit={crearUsuario}>
-              <input type="text" placeholder="Nombre" required value={nuevoUsuario.nombre} onChange={(e) => setNuevoUsuario({...nuevoUsuario, nombre: e.target.value})} />
-              <input type="email" placeholder="Email" required value={nuevoUsuario.email} onChange={(e) => setNuevoUsuario({...nuevoUsuario, email: e.target.value})} />
-              <input type="tel" placeholder="Teléfono" value={nuevoUsuario.telefono} onChange={(e) => setNuevoUsuario({...nuevoUsuario, telefono: e.target.value})} />
-              <input type="password" placeholder="Contraseña" required value={nuevoUsuario.password} onChange={(e) => setNuevoUsuario({...nuevoUsuario, password: e.target.value})} />
-              <select value={nuevoUsuario.rol} onChange={(e) => setNuevoUsuario({...nuevoUsuario, rol: e.target.value})}>
-                <option value="usuario">👤 Usuario</option>
-                <option value="admin">👑 Administrador</option>
+              <input 
+                type="text" 
+                placeholder="Nombre completo" 
+                required 
+                value={nuevoUsuario.nombre} 
+                onChange={(e) => setNuevoUsuario({...nuevoUsuario, nombre: e.target.value})} 
+              />
+              <input 
+                type="email" 
+                placeholder="Correo electrónico" 
+                required 
+                value={nuevoUsuario.email} 
+                onChange={(e) => setNuevoUsuario({...nuevoUsuario, email: e.target.value})} 
+              />
+              <input 
+                type="tel" 
+                placeholder="Teléfono" 
+                value={nuevoUsuario.telefono} 
+                onChange={(e) => setNuevoUsuario({...nuevoUsuario, telefono: e.target.value})} 
+              />
+              <input 
+                type="password" 
+                placeholder="Contraseña" 
+                required 
+                value={nuevoUsuario.password} 
+                onChange={(e) => setNuevoUsuario({...nuevoUsuario, password: e.target.value})} 
+              />
+              <select 
+                value={nuevoUsuario.rol} 
+                onChange={(e) => setNuevoUsuario({...nuevoUsuario, rol: e.target.value})}
+              >
+                <option value="usuario">Usuario</option>
+                <option value="admin">Administrador</option>
               </select>
               <div className="modal-buttons">
-                <button type="button" className="btn-cancel" onClick={() => { setShowModal(false); setNuevoUsuario({ nombre: '', email: '', telefono: '', password: '', rol: 'usuario' }); }}>Cancelar</button>
+                <button type="button" className="btn-cancel" onClick={() => { setShowModal(false); setNuevoUsuario({ nombre: '', email: '', telefono: '', password: '', rol: 'usuario' }); }}>
+                  Cancelar
+                </button>
                 <button type="submit" className="btn-save">Guardar</button>
               </div>
             </form>
@@ -551,17 +648,39 @@ function AdminDashboard() {
       {showEditModal && usuarioEditando && (
         <div className="modal-overlay" onClick={() => { setShowEditModal(false); setUsuarioEditando(null); }}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <h3>✏️ Editar Usuario</h3>
+            <h3>Editar Usuario</h3>
             <form onSubmit={editarUsuario}>
-              <input type="text" placeholder="Nombre" required value={usuarioEditando.nombre} onChange={(e) => setUsuarioEditando({...usuarioEditando, nombre: e.target.value})} />
-              <input type="email" placeholder="Email" required value={usuarioEditando.email} onChange={(e) => setUsuarioEditando({...usuarioEditando, email: e.target.value})} />
-              <input type="tel" placeholder="Teléfono" value={usuarioEditando.telefono || ''} onChange={(e) => setUsuarioEditando({...usuarioEditando, telefono: e.target.value})} />
-              <select value={usuarioEditando.rol} onChange={(e) => setUsuarioEditando({...usuarioEditando, rol: e.target.value})}>
-                <option value="usuario">👤 Usuario</option>
-                <option value="admin">👑 Administrador</option>
+              <input 
+                type="text" 
+                placeholder="Nombre" 
+                required 
+                value={usuarioEditando.nombre} 
+                onChange={(e) => setUsuarioEditando({...usuarioEditando, nombre: e.target.value})} 
+              />
+              <input 
+                type="email" 
+                placeholder="Email" 
+                required 
+                value={usuarioEditando.email} 
+                onChange={(e) => setUsuarioEditando({...usuarioEditando, email: e.target.value})} 
+              />
+              <input 
+                type="tel" 
+                placeholder="Teléfono" 
+                value={usuarioEditando.telefono || ''} 
+                onChange={(e) => setUsuarioEditando({...usuarioEditando, telefono: e.target.value})} 
+              />
+              <select 
+                value={usuarioEditando.rol} 
+                onChange={(e) => setUsuarioEditando({...usuarioEditando, rol: e.target.value})}
+              >
+                <option value="usuario">Usuario</option>
+                <option value="admin">Administrador</option>
               </select>
               <div className="modal-buttons">
-                <button type="button" className="btn-cancel" onClick={() => { setShowEditModal(false); setUsuarioEditando(null); }}>Cancelar</button>
+                <button type="button" className="btn-cancel" onClick={() => { setShowEditModal(false); setUsuarioEditando(null); }}>
+                  Cancelar
+                </button>
                 <button type="submit" className="btn-save">Guardar Cambios</button>
               </div>
             </form>

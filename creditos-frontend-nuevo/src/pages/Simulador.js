@@ -247,13 +247,13 @@ export default function Simulador() {
             <img src="/logo.png" alt="Societaria Cantera" className="logo-header" />
             <div className="coop-name">
               <h1>CANTERA R.L.</h1>
-              <p>Cooperativa de Ahorro y Crédito</p>
+              <p>Cooperativa de Ahorro y Crédito Societaria</p>
             </div>
           </div>
           <div className="user-info">
-            <span className="user-name">Bienvenido {usuario?.nombre}</span>
+            <span className="user-name">Bienvenid@ {usuario?.nombre}</span>
             {usuario?.rol === 'admin' && (
-              <Link to="/admin" className="btn-admin">👑 Panel De Control</Link>
+              <Link to="/admin" className="btn-admin">Panel De Control</Link>
             )}
             <button onClick={handleLogout} className="btn-logout">Cerrar Sesión</button>
           </div>
@@ -264,24 +264,24 @@ export default function Simulador() {
         {!mostrarResultados ? (
           <div className="form-card">
             <div className="card-header">
-              <h2>📋 SIMULADOR DE CRÉDITOS</h2>
+              <h2>SIMULADOR DE CRÉDITOS</h2>
               <p>Complete los datos para obtener una cotización</p>
             </div>
             <form onSubmit={handleSimular}>
               <div className="card-body">
                 <div className="form-row">
                   <div className="form-group">
-                    <label>👤 NOMBRE DEL SOCIO / INTERESADO *</label>
+                    <label>NOMBRE DEL SOCIO / INTERESADO *</label>
                     <input
                       type="text"
                       required
-                      placeholder="Ej: Juan Pérez Mamani"
+                      placeholder="Ej: Juan Pérez"
                       value={form.nombreSocio}
                       onChange={(e) => setForm({...form, nombreSocio: e.target.value})}
                     />
                   </div>
                   <div className="form-group">
-                    <label>💰 MONTO DEL CRÉDITO (BOB)</label>
+                    <label>MONTO DEL CRÉDITO (Bs)</label>
                     <input
                       type="number"
                       required
@@ -293,7 +293,7 @@ export default function Simulador() {
                 </div>
                 <div className="form-row">
                   <div className="form-group">
-                    <label>📅 FECHA DE DESEMBOLSO</label>
+                    <label>FECHA DE DESEMBOLSO</label>
                     <input
                       type="date"
                       required
@@ -302,18 +302,18 @@ export default function Simulador() {
                     />
                   </div>
                   <div className="form-group">
-                    <label>📅 FECHA PRIMER PAGO (Opcional)</label>
+                    <label>FECHA PRIMER PAGO (Opcional)</label>
                     <input
                       type="date"
                       value={form.fechaPrimerPago}
                       onChange={(e) => setForm({...form, fechaPrimerPago: e.target.value})}
                     />
-                    <small>Dejar vacío para calcular automáticamente (10 del mes siguiente al siguiente)</small>
+                    <small>Dejar vacío para calcular automáticamente</small>
                   </div>
                 </div>
                 <div className="form-row">
                   <div className="form-group">
-                    <label>📈 TASA DE INTERÉS (%)</label>
+                    <label>TASA DE INTERÉS (%)</label>
                     <input
                       type="number"
                       step="0.01"
@@ -335,7 +335,7 @@ export default function Simulador() {
                   </div>
                 </div>
                 <button type="submit" disabled={cargando} className="btn-simular">
-                  {cargando ? '🔄 CALCULANDO...' : '🔍 SIMULAR CRÉDITO'}
+                  {cargando ? 'CALCULANDO...' : 'SIMULAR CRÉDITO'}
                 </button>
               </div>
             </form>
@@ -344,7 +344,7 @@ export default function Simulador() {
           <div ref={cotizacionRef}>
             <div className="card">
               <div className="card-header">
-                <h3>📋 DATOS DEL CRÉDITO</h3>
+                <h3>DATOS DEL CRÉDITO</h3>
               </div>
               <div className="card-body">
                 <div className="summary-grid">
@@ -370,10 +370,10 @@ export default function Simulador() {
                 </div>
                 <div style={{ display: 'flex', gap: '10px', marginTop: '15px', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
                   {!editandoCuota ? (
-                    <button className="btn-nuevo" onClick={() => setEditandoCuota(true)}>✏️ EDITAR CUOTA</button>
+                    <button className="btn-nuevo" onClick={() => setEditandoCuota(true)}>EDITAR CUOTA</button>
                   ) : (
                     <>
-                      <button className="btn-guardar" onClick={recalcularConCuotaEditada}>💾 GUARDAR CAMBIOS</button>
+                      <button className="btn-guardar" onClick={recalcularConCuotaEditada}>GUARDAR CAMBIOS</button>
                       <button className="btn-cancelar" onClick={() => { setEditandoCuota(false); setCuotaEditada(resultado.cuotaRedondeada.toString()); }}>❌ CANCELAR</button>
                     </>
                   )}
@@ -383,13 +383,13 @@ export default function Simulador() {
 
             <div className="card">
               <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
-                <h3>📊 TABLA DE AMORTIZACIÓN</h3>
+                <h3>TABLA DE AMORTIZACIÓN</h3>
                 <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                   <button onClick={handleGuardarInteres} disabled={guardando} className="btn-guardar">
-                    {guardando ? '💾 GUARDANDO...' : '📝 REGISTRAR INTERÉS'}
+                    {guardando ? 'GUARDANDO...' : 'REGISTRAR INTERÉS'}
                   </button>
-                  <button onClick={handleNuevo} className="btn-nuevo">✨ NUEVA SIMULACIÓN</button>
-                  <button onClick={generarPDF} className="btn-pdf">📥 DESCARGAR PDF</button>
+                  <button onClick={handleNuevo} className="btn-nuevo">NUEVA SIMULACIÓN</button>
+                  <button onClick={generarPDF} className="btn-pdf">DESCARGAR</button>
                 </div>
               </div>
               <div className="card-body">

@@ -21,9 +21,9 @@ export default function Login() {
     <div className="login-container">
       <div className="login-card">
         <div className="logo-section">
-          <img src="/logo.png" alt="Societaria Cantera R.L." className="logo" />
+          <img src="/icon.png" alt="Societaria Cantera R.L." className="logo" />
           <h1 className="brand-title">Cantera R.L.</h1>
-          <p className="brand-subtitle">Cooperativa de Ahorro y Crédito</p>
+          <p className="brand-subtitle">Cooperativa de Ahorro y Crédito Societaria</p>
         </div>
 
         <h2 className="welcome-title">Bienvenido</h2>
