@@ -131,45 +131,90 @@ export default function Simulador() {
     return date.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
   };
 
-  const generarPDF = () => {
+  const generarPDF = async () => {
     if (!resultado) return;
     
     try {
-      const doc = new jsPDF('landscape');
+      // Crear documento en landscape
+      const doc = new jsPDF('landscape', 'mm', 'a4');
+      const pageWidth = doc.internal.pageSize.getWidth();
       
+      // Función para cargar y dibujar logo
+      const cargarYDibujarLogo = () => {
+        return new Promise((resolve) => {
+          const img = new Image();
+          img.crossOrigin = 'Anonymous';
+          img.src = '/logo.png';
+          img.onload = () => {
+            const logoWidth = 30;
+            const logoHeight = (img.height * logoWidth) / img.width;
+            doc.addImage(img, 'PNG', 15, 8, logoWidth, logoHeight);
+            resolve();
+          };
+          img.onerror = () => {
+            console.warn('No se pudo cargar el logo');
+            resolve();
+          };
+        });
+      };
+
+      await cargarYDibujarLogo();
+      
+      // Encabezado con el nombre de la cooperativa
       doc.setFillColor(27, 94, 32);
-      doc.rect(0, 0, 297, 35, 'F');
+      doc.rect(0, 0, pageWidth, 32, 'F');
       doc.setTextColor(255, 255, 255);
-      doc.setFontSize(18);
-      doc.text('CANTERA R.L.', 148.5, 20, { align: 'center' });
-      doc.setFontSize(10);
-      doc.text('Cooperativa de Ahorro y Crédito Societaria', 148.5, 30, { align: 'center' });
+      doc.setFontSize(16);
+      doc.text('CANTERA R.L.', pageWidth / 2, 15, { align: 'center' });
+      doc.setFontSize(9);
+      doc.text('Cooperativa de Ahorro y Crédito Societaria', pageWidth / 2, 24, { align: 'center' });
       
+      // Título
       doc.setTextColor(0, 0, 0);
-      doc.setFontSize(14);
-      doc.text('COTIZACIÓN DE CRÉDITO', 148.5, 50, { align: 'center' });
+      doc.setFontSize(12);
+      doc.text('COTIZACIÓN DE CRÉDITO', pageWidth / 2, 42, { align: 'center' });
       
-      doc.setFontSize(10);
-      doc.text(`Fecha: ${new Date().toLocaleDateString()}`, 20, 65);
-      doc.text(`Solicitante: ${form.nombreSocio}`, 20, 75);
-      doc.text(`Monto: Bs ${formatMoney(parseFloat(form.capital))}`, 20, 85);
-      doc.text(`Tasa: ${form.tasa}%`, 20, 95);
-      doc.text(`Plazo: ${form.plazo} meses`, 20, 105);
-      doc.text(`Cuota Fija: Bs ${formatMoney(resultado.cuotaRedondeada)}`, 150, 75);
-      doc.text(`Ahorro Total: Bs ${formatMoney(resultado.ahorroTotal)}`, 150, 85);
-      doc.text(`Total a Pagar: Bs ${formatMoney(resultado.cuotaRedondeada * form.plazo)}`, 150, 95);
+      // Resumen compacto (2 columnas)
+      doc.setFontSize(9);
+      doc.setTextColor(60, 60, 60);
+      const fechaActual = new Date().toLocaleDateString('es-ES');
+      const montoTotal = resultado.cuotaRedondeada * form.plazo;
       
-      const tableColumn = ['N°', 'Fecha', 'Capital', 'Interés', 'Seguro', 'Total Real', 'Ahorro', 'Cuota', 'Saldo'];
+      // Columna izquierda
+      let yPos = 52;
+      doc.text(`Fecha Cotización: ${fechaActual}`, 20, yPos);
+      yPos += 6;
+      doc.text(`Solicitante: ${form.nombreSocio || 'No especificado'}`, 20, yPos);
+      yPos += 6;
+      doc.text(`Monto Solicitado: Bs ${formatMoney(parseFloat(form.capital))}`, 20, yPos);
+      yPos += 6;
+      doc.text(`Tasa de Interés: ${form.tasa}%`, 20, yPos);
+      
+      // Columna derecha
+      let yPosRight = 52;
+      doc.text(`Plazo: ${form.plazo} meses`, 150, yPosRight);
+      yPosRight += 6;
+      doc.text(`Cuota Fija: Bs ${formatMoney(resultado.cuotaRedondeada)}`, 150, yPosRight);
+      yPosRight += 6;
+      doc.text(`Ahorro Total: Bs ${formatMoney(resultado.ahorroTotal)}`, 150, yPosRight);
+      yPosRight += 6;
+      doc.text(`Total a Pagar: Bs ${formatMoney(montoTotal)}`, 150, yPosRight);
+      
+      // Línea separadora
+      doc.setDrawColor(200, 200, 200);
+      doc.line(15, 84, pageWidth - 15, 84);
+      
+      // Tabla de amortización
+      const tableColumn = ['N°', 'Fecha', 'Capital', 'Interés', 'Seguro', 'Ahorro', 'Cuota', 'Saldo'];
       const tableRows = resultado.cuotas.map(cuota => [
         cuota.cuota,
         formatDate(cuota.fecha),
-        `Bs ${formatMoney(cuota.capital)}`,
-        `Bs ${formatMoney(cuota.interes)}`,
-        `Bs ${formatMoney(cuota.cargos)}`,
-        `Bs ${formatMoney(cuota.totalReal)}`,
-        `Bs ${formatMoney(cuota.ahorro)}`,
-        `Bs ${formatMoney(cuota.cuotaTotal)}`,
-        `Bs ${formatMoney(cuota.saldo)}`
+        formatMoney(cuota.capital),
+        formatMoney(cuota.interes),
+        formatMoney(cuota.cargos),
+        formatMoney(cuota.ahorro),
+        formatMoney(cuota.cuotaTotal),
+        formatMoney(cuota.saldo)
       ]);
       
       // Agregar fila de totales
@@ -178,49 +223,65 @@ export default function Simulador() {
       const totalSeguro = resultado.cuotas.reduce((s, c) => s + (c.cargos || 0), 0);
       
       tableRows.push([
-        'TOTALES',
+        'TOTAL',
         '',
-        `Bs ${formatMoney(totalCapital)}`,
-        `Bs ${formatMoney(totalInteres)}`,
-        `Bs ${formatMoney(totalSeguro)}`,
-        '',
-        `Bs ${formatMoney(resultado.ahorroTotal)}`,
+        formatMoney(totalCapital),
+        formatMoney(totalInteres),
+        formatMoney(totalSeguro),
+        formatMoney(resultado.ahorroTotal),
         '',
         ''
       ]);
       
+      // Configuración de autoTable
       doc.autoTable({
-        startY: 115,
+        startY: 90,
         head: [tableColumn],
         body: tableRows,
         theme: 'striped',
         headStyles: { 
           fillColor: [27, 94, 32], 
           textColor: 255,
-          fontSize: 9,
-          fontStyle: 'bold'
+          fontSize: 8,
+          fontStyle: 'bold',
+          halign: 'center'
         },
         bodyStyles: { 
-          fontSize: 8, 
-          cellPadding: 2 
+          fontSize: 7.5, 
+          cellPadding: 2,
+          halign: 'right'
         },
-        footStyles: {
-          fillColor: [245, 245, 245],
-          textColor: 0,
-          fontStyle: 'bold'
-        }
+        columnStyles: {
+          0: { halign: 'center', cellWidth: 12 },
+          1: { halign: 'center', cellWidth: 25 },
+          2: { halign: 'right', cellWidth: 28 },
+          3: { halign: 'right', cellWidth: 28 },
+          4: { halign: 'right', cellWidth: 25 },
+          5: { halign: 'right', cellWidth: 28 },
+          6: { halign: 'right', cellWidth: 28 },
+          7: { halign: 'right', cellWidth: 30 }
+        },
+        margin: { left: 15, right: 15 },
+        pageBreak: 'auto', // Permite saltos de página automáticos
+        showHead: 'everyPage' // Muestra el encabezado en cada página
       });
       
-      const finalY = doc.lastAutoTable.finalY + 10;
-      doc.setFontSize(8);
-      doc.setTextColor(100, 100, 100);
-      doc.text('Esta cotización es una simulación. La tasa está sujeta a evaluación crediticia.', 148.5, finalY, { align: 'center' });
-      doc.text('Cooperativa de Ahorro y Credito Cantera R.L.', 148.5, finalY + 7, { align: 'center' });
+      // Pie de página en cada página
+      const pageCount = doc.internal.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(7);
+        doc.setTextColor(150, 150, 150);
+        const finalY = doc.internal.pageSize.getHeight() - 10;
+        doc.text('Esta cotización es una simulación. La tasa está sujeta a evaluación crediticia.', pageWidth / 2, finalY - 5, { align: 'center' });
+        doc.text('Cooperativa de Ahorro y Crédito Cantera R.L.', pageWidth / 2, finalY, { align: 'center' });
+        doc.text(`Página ${i} de ${pageCount}`, pageWidth - 20, finalY);
+      }
       
-      doc.save(`cotizacion_${form.nombreSocio.replace(/\s/g, '_')}.pdf`);
+      doc.save(`cotizacion_${(form.nombreSocio || 'cliente').replace(/\s/g, '_')}.pdf`);
       toast.success('PDF descargado');
     } catch (error) {
-      console.error(error);
+      console.error('Error generando PDF:', error);
       toast.error('Error al generar PDF');
     }
   };
