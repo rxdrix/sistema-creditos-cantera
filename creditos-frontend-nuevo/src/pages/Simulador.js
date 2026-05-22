@@ -15,6 +15,7 @@ export default function Simulador() {
   const [form, setForm] = useState({
     nombreSocio: '',
     capital: '',
+    tasa: '',
     plazo: '',
     fechaInicio: new Date().toISOString().split('T')[0],
     fechaPrimerPago: ''
@@ -130,34 +131,65 @@ export default function Simulador() {
     return date.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
   };
 
+  // FUNCIÓN PDF MODIFICADA - TAMAÑO CARTA, VERTICAL, SIN TASA
   const generarPDF = () => {
     if (!resultado) return;
     
     try {
-      const doc = new jsPDF('landscape');
+      // Configurar documento en tamaño CARTA (Letter = 8.5" x 11") y vertical
+      const doc = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'letter'
+      });
       
-      doc.setFillColor(27, 94, 32);
-      doc.rect(0, 0, 297, 35, 'F');
+      // Colores de la cooperativa
+      const coopGreen = [27, 94, 32];
+      const coopGold = [212, 175, 55];
+      
+      // ========== ENCABEZADO ==========
+      doc.setFillColor(...coopGreen);
+      doc.rect(0, 0, 215.9, 35, 'F'); // 215.9mm = ancho carta
+      
       doc.setTextColor(255, 255, 255);
-      doc.setFontSize(18);
-      doc.text('CANTERA R.L.', 148.5, 20, { align: 'center' });
-      doc.setFontSize(10);
-      doc.text('Cooperativa de Ahorro y Crédito Societaria', 148.5, 30, { align: 'center' });
+      doc.setFontSize(16);
+      doc.text('CANTERA R.L.', 107.95, 18, { align: 'center' });
+      doc.setFontSize(9);
+      doc.text('Cooperativa de Ahorro y Crédito Societaria', 107.95, 27, { align: 'center' });
       
+      // ========== TÍTULO ==========
       doc.setTextColor(0, 0, 0);
-      doc.setFontSize(14);
-      doc.text('COTIZACIÓN DE CRÉDITO', 148.5, 50, { align: 'center' });
+      doc.setFontSize(13);
+      doc.text('COTIZACIÓN DE CRÉDITO', 107.95, 48, { align: 'center' });
       
-      doc.setFontSize(10);
-      doc.text(`Fecha: ${new Date().toLocaleDateString()}`, 20, 65);
-      doc.text(`Solicitante: ${form.nombreSocio}`, 20, 75);
-      doc.text(`Monto: Bs ${formatMoney(parseFloat(form.capital))}`, 20, 85);
-      doc.text(`Tasa: ${form.tasa}%`, 20, 95);
-      doc.text(`Plazo: ${form.plazo} meses`, 20, 105);
-      doc.text(`Cuota Fija: Bs ${formatMoney(resultado.cuotaRedondeada)}`, 150, 75);
-      doc.text(`Ahorro Total: Bs ${formatMoney(resultado.ahorroTotal)}`, 150, 85);
-      doc.text(`Total a Pagar: Bs ${formatMoney(resultado.cuotaRedondeada * form.plazo)}`, 150, 95);
+      // ========== DATOS DEL CLIENTE ==========
+      doc.setFontSize(9);
+      doc.setTextColor(80, 80, 80);
+      doc.text(`Fecha: ${new Date().toLocaleDateString()}`, 20, 62);
+      doc.text(`Solicitante: ${form.nombreSocio}`, 20, 72);
       
+      // Cuadro resumen (solo datos necesarios, SIN TASA)
+      doc.setFillColor(245, 245, 245);
+      doc.roundedRect(20, 82, 175.9, 35, 3, 3, 'F');
+      doc.setDrawColor(...coopGold);
+      doc.setLineWidth(0.5);
+      doc.roundedRect(20, 82, 175.9, 35, 3, 3, 'D');
+      
+      doc.setFontSize(9);
+      doc.setTextColor(...coopGreen);
+      doc.setFont(undefined, 'bold');
+      doc.text('RESUMEN DEL CRÉDITO', 107.95, 92, { align: 'center' });
+      
+      doc.setFont(undefined, 'normal');
+      doc.setTextColor(0, 0, 0);
+      // Primera fila
+      doc.text(`Monto: Bs ${formatMoney(parseFloat(form.capital))}`, 30, 103);
+      doc.text(`Plazo: ${form.plazo} meses`, 110, 103);
+      // Segunda fila
+      doc.text(`Cuota Fija: Bs ${formatMoney(resultado.cuotaRedondeada)}`, 30, 112);
+      doc.text(`Ahorro Total: Bs ${formatMoney(resultado.ahorroTotal)}`, 110, 112);
+      
+      // ========== TABLA DE AMORTIZACIÓN ==========
       const tableColumn = ['N°', 'Fecha', 'Capital', 'Interés', 'Seguro', 'Total Real', 'Ahorro', 'Cuota', 'Saldo'];
       const tableRows = resultado.cuotas.map(cuota => [
         cuota.cuota,
@@ -171,7 +203,7 @@ export default function Simulador() {
         `Bs ${formatMoney(cuota.saldo)}`
       ]);
       
-      // Agregar fila de totales
+      // Calcular totales
       const totalCapital = resultado.cuotas.reduce((s, c) => s + (c.capital || 0), 0);
       const totalInteres = resultado.cuotas.reduce((s, c) => s + (c.interes || 0), 0);
       const totalSeguro = resultado.cuotas.reduce((s, c) => s + (c.cargos || 0), 0);
@@ -188,38 +220,57 @@ export default function Simulador() {
         ''
       ]);
       
+      // Generar tabla con ajuste automático
       doc.autoTable({
-        startY: 115,
+        startY: 125,
         head: [tableColumn],
         body: tableRows,
         theme: 'striped',
         headStyles: { 
-          fillColor: [27, 94, 32], 
+          fillColor: coopGreen, 
           textColor: 255,
-          fontSize: 9,
-          fontStyle: 'bold'
+          fontSize: 8,
+          fontStyle: 'bold',
+          halign: 'center'
         },
         bodyStyles: { 
-          fontSize: 8, 
-          cellPadding: 2 
+          fontSize: 7, 
+          cellPadding: 2,
+          halign: 'right'
+        },
+        columnStyles: {
+          0: { halign: 'center' },
+          1: { halign: 'center' }
         },
         footStyles: {
           fillColor: [245, 245, 245],
           textColor: 0,
           fontStyle: 'bold'
-        }
+        },
+        margin: { left: 15, right: 15 },
+        tableWidth: 'auto'
       });
       
-      const finalY = doc.lastAutoTable.finalY + 10;
-      doc.setFontSize(8);
-      doc.setTextColor(100, 100, 100);
-      doc.text('Esta cotización es una simulación. La tasa está sujeta a evaluación crediticia.', 148.5, finalY, { align: 'center' });
-      doc.text('Cooperativa de Ahorro y Credito Cantera R.L.', 148.5, finalY + 7, { align: 'center' });
+      // ========== PIE DE PÁGINA (en cada página) ==========
+      const pageCount = doc.internal.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        const currentPageHeight = doc.internal.pageSize.getHeight();
+        
+        doc.setFontSize(7);
+        doc.setTextColor(120, 120, 120);
+        doc.text('Esta cotización es una simulación. La tasa está sujeta a evaluación crediticia.', 107.95, currentPageHeight - 12, { align: 'center' });
+        doc.text('Cooperativa de Ahorro y Crédito Cantera R.L.', 107.95, currentPageHeight - 6, { align: 'center' });
+        
+        // Número de página
+        doc.text(`Página ${i} de ${pageCount}`, 200, currentPageHeight - 6, { align: 'right' });
+      }
       
+      // Guardar el PDF
       doc.save(`cotizacion_${form.nombreSocio.replace(/\s/g, '_')}.pdf`);
       toast.success('PDF descargado');
     } catch (error) {
-      console.error(error);
+      console.error('Error al generar PDF:', error);
       toast.error('Error al generar PDF');
     }
   };
@@ -398,7 +449,7 @@ export default function Simulador() {
                       <tr>
                         <th>N°</th><th>Fecha</th><th>Capital</th><th>Interés</th>
                         <th>Seguro</th><th>Total Real</th><th>Ahorro</th><th>Cuota Fija</th><th>Saldo</th>
-                      </tr>
+                       </tr>
                     </thead>
                     <tbody>
                       <tr className="row-inicial">
